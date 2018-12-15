@@ -1,0 +1,13 @@
+[package]
+name = "umeboshi"
+version = "0.1.0"
+authors = ["Masahiko Hamazawa <ichigyo.zanmai@gmail.com>"]
+edition = "2018"
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/masahiko-ofgp/umeboshi"
+description = "Interactive shell."
+
+[dependencies]
+termion = "1.5.1"
+onigiri = "0.1.10"
