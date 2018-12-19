@@ -2,18 +2,21 @@ use std::io::Write;
 use std::io;
 use termion::{color, style};
 
+
 const VERSION: &str = "0.1.0";
 const PRIMARY_PROMPT: &str = "umeboshi>>";
 const HELP: &str = r#"
     [Usage]
-    quit:                close shell.
-    % help or % -h:      help.
-    % version or % -v:   version information.
-    % echo [text]:       output string.
+    quit                close shell.
+    % [command]         % is calling function.
+    % help or % -h      help.
+    % version or % -v   version information.
+    % echo [text]       output string.
+    % sum 1 2 3 ....    output the sum.
 "#;
 
-/// Main Loop 
-/// quit => Close shell.
+// Main Loop 
+// quit => Close shell.
 pub fn main_loop() {
 
     loop {
@@ -49,11 +52,18 @@ pub fn main_loop() {
 
 fn bind_func<'b>(v: &Vec<&'b str>) {
     match &v[1] {
-        &"echo" => println!("{:?}", &v[2..].join(&" ")),
+        &"echo" => println!("{}", &v[2..].join(&" ")),
         &"help"|&"-h" => println!("{}{}{}", color::Fg(color::Cyan), HELP, style::Reset),
         &"version"|&"-v" => println!("{}", VERSION),
+        &"sum" => println!("{}", sum(&v)),
         _ => println!("Not exist its command."),
     }
 }
 
-
+fn sum<'s>(v: &Vec<&'s str>) -> i32 {
+    let mut v_clone: Vec<&str> = v.clone();
+    let params: Vec<&'s str> = v_clone.drain(2..).collect();
+    let params2: Vec<i32> = params.iter().map(|p| p.parse::<i32>().unwrap()).collect();
+    let params3 = params2.iter().fold(0, |a, b| a + b);
+    params3
+}
