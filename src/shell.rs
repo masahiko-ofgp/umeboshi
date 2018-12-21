@@ -3,6 +3,11 @@ use std::io;
 use termion::{color, style};
 use super::calc;
 
+const TITLE: &str = r#"
+    *--------------*
+    |umeboshi shell|
+    *--------------*
+"#;
 const VERSION: &str = "0.1.0";
 const PRIMARY_PROMPT: &str = "umeboshi>>";
 const HELP: &str = r#"
@@ -17,6 +22,12 @@ const HELP: &str = r#"
 
 // Main Loop 
 pub fn main_loop() {
+    println!(
+        "{}{}{}", 
+        color::Fg(color::LightRed), 
+        TITLE, 
+        style::Reset
+    );
 
     loop {
         let mut s = String::new();
