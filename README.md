@@ -9,16 +9,18 @@ This application is my interactive shell.
 However, this application has just started to develop, 
 and does not have any particular functions.
 
-Now, umeboshi has 5 commands.
+Now, umeboshi has 6 commands.
 
 - echo
 - quit
 - help
 - version
 - sum
+- prod
 
 ## Example
 
-    $ cargo run --bin example
+    $ cargo run
 
-<img src="./imgs/screenshot-umeboshi2.png" alt="screenshot">
+<img src="./imgs/screenshot.png", alt="umeboshi screenshot">
+
