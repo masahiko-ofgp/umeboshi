@@ -22,5 +22,5 @@ Now, umeboshi has 6 commands.
 
     $ cargo run
 
-<img src="./imgs/screenshot.png", alt="umeboshi screenshot">
+<img src="./imgs/screenshot.png" alt="umeboshi screenshot">
 
