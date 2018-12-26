@@ -10,3 +10,4 @@ description = "Interactive shell."
 
 [dependencies]
 termion = "1.5.1"
+onigiri = "0.1.11"
