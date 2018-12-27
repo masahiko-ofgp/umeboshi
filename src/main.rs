@@ -26,7 +26,7 @@ const TITLE: &str = r#"
     *--------------*
 "#;
 const VERSION: &str = "0.1.0";
-const PRIMARY_PROMPT: &str = "umeboshi>>";
+const PRIMARY_PROMPT: &str = "umeboshi>> ";
 const HELP: &str = r#"
     [Usage]
     quit                    close shell.
@@ -47,11 +47,10 @@ fn main() {
         TITLE, 
         style::Reset
     );
-
     loop {
         let mut s = String::new();
         print!(
-            "{}{}{} ", 
+            "{}{}{}", 
             color::Fg(color::LightRed),
             PRIMARY_PROMPT, 
             style::Reset, 
@@ -95,8 +94,8 @@ fn main() {
 fn bind_func<'a>(v: &Vec<&'a str>) -> String {
     match &v[1] {
         &"echo" => format!("{}", v[2..].join(&" ")),
-        &"sum" => format!("{}", calc::sum(v.to_vec())),
-        &"prod" => format!("{}", calc::prod(v.to_vec())),
+        &"sum" => calc::sum(v.to_vec()),
+        &"prod" => calc::prod(v.to_vec()),
         _ => format!("Not exist its command."),
     }
 }
