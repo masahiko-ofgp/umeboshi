@@ -1,3 +1,7 @@
+// calc.rs use my crate onigiri 0.1.11.
+// This is a library for handling chars.
+// `is_integer` validate whether it is integer.
+// `is_float` validate whether it is float.
 use onigiri::validator::{is_integer, is_float};
 
 const NOT_NUMBER: &str = "Contain not-number.";
@@ -27,6 +31,14 @@ macro_rules! product {
 }
 
 /// Return the sum of numbers.
+/// ```no_run
+/// let test_v = vec!["%", "sum", "u8", "1", "2"];
+/// assert_eq!(
+///     sum(test_v),
+///     "3".to_string()
+/// );
+/// ```
+/// If you don't input "u8", Error. 
 pub fn sum(mut v: Vec<&str>) -> String {
     let params: Vec<&str> = v.drain(2..).collect();
 
@@ -76,6 +88,13 @@ pub fn sum(mut v: Vec<&str>) -> String {
 }
 
 /// Return the product of numbers.
+/// ```no_run
+/// let test_v = vec!["%", "prod", "f64", "100.0", "0.75"];
+/// assert_eq!(
+///     prod(test_v),
+///     "75".to_string()
+/// );
+/// ```
 pub fn prod(mut v: Vec<&str>) -> String {
     let params: Vec<&str> = v.drain(2..).collect();
 
