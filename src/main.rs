@@ -20,11 +20,11 @@ use std::io;
 use termion::{color, style};
 mod calc;
 
-const TITLE: &str = r#"
-    *--------------*
-    |umeboshi shell|
-    *--------------*
-"#;
+const TITLE: &str = "
+\t*---------------------------*
+\t|        umeboshi           |
+\t*---------------------------*
+";
 const VERSION: &str = "0.1.0";
 const PRIMARY_PROMPT: &str = "umeboshi>> ";
 const HELP: &str = r#"
@@ -42,8 +42,8 @@ const HELP: &str = r#"
 /// Main Loop.
 fn main() {
     println!(
-        "{}{}{}", 
-        color::Fg(color::LightRed), 
+        "{}{}{}",
+        color::Fg(color::Red), 
         TITLE, 
         style::Reset
     );
@@ -51,7 +51,7 @@ fn main() {
         let mut s = String::new();
         print!(
             "{}{}{}", 
-            color::Fg(color::LightRed),
+            color::Fg(color::Red),
             PRIMARY_PROMPT, 
             style::Reset, 
         );
@@ -59,25 +59,26 @@ fn main() {
         io::stdin().read_line(&mut s).expect("Failed.");
 
         let v: Vec<&str> = s.trim().split_whitespace().collect();
+        let (head, tail) = (&v[..1], &v[1..]);
 
-        match &v[0] {
-            &"quit" => {
+        match head[0] {
+            "quit" => {
                 println!("Bye!!");
                 break;
             },
-            &"version"|&"-v" => {
+            "version"|"-v" => {
                 println!("{}", VERSION);
                 continue;
             },
-            &"help"|&"-h" => {
+            "help"|"-h" => {
                 println!("{}{}{}", color::Fg(color::Cyan), HELP, style::Reset);
                 continue;
             },
-            &"%" => {
-                println!("{}", bind_func(&v));
+            "%" => {
+                println!("{}", bind_func(tail));
                 continue;
             },
-            &_ => {
+            _ => {
                 println!(
                     "\tPlease input{} {} help{}", 
                     color::Fg(color::LightYellow), 
@@ -91,11 +92,12 @@ fn main() {
 }
 
 /// Distinction of some functions.
-fn bind_func<'a>(v: &Vec<&'a str>) -> String {
-    match &v[1] {
-        &"echo" => format!("{}", v[2..].join(&" ")),
-        &"sum" => calc::sum(v.to_vec()),
-        &"prod" => calc::prod(v.to_vec()),
+fn bind_func<'a>(v: &[&'a str]) -> String {
+    let (cmd, params) = (&v[..1], &v[1..]);
+    match cmd[0] {
+        "echo" => format!("{}", params.join(&" ")),
+        "sum" => calc::sum(params.to_vec()),
+        "prod" => calc::prod(params.to_vec()),
         _ => format!("Not exist its command."),
     }
 }

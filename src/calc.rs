@@ -32,17 +32,15 @@ macro_rules! product {
 
 /// Return the sum of numbers.
 /// ```no_run
-/// let test_v = vec!["%", "sum", "u8", "1", "2"];
+/// let test_v = vec!["u8", "1", "2"];
 /// assert_eq!(
 ///     sum(test_v),
 ///     "3".to_string()
 /// );
 /// ```
 /// If you don't input "u8", Error. 
-pub fn sum(mut v: Vec<&str>) -> String {
-    let params: Vec<&str> = v.drain(2..).collect();
-
-    let (typ, values) = params.split_at(1);
+pub fn sum(v: Vec<&str>) -> String {
+    let (typ, values) = (&v[..1], &v[1..]);
 
     let vvc: Vec<Vec<char>> = values.iter()
         .map(|ref p| p.chars().collect())
@@ -52,19 +50,19 @@ pub fn sum(mut v: Vec<&str>) -> String {
     // return error string-message. And main loop continue.
     // Therefore, I don't use Result.
     if vvc.iter().all(|r| is_integer(&r) == true) {
-        match &typ[0] {
-            &"u8" => sum!(values, u8),
-            &"i8" => sum!(values, i8),
-            &"u16" => sum!(values, u16),
-            &"i16" => sum!(values, i16),
-            &"u32" => sum!(values, u32),
-            &"i32" => sum!(values, i32),
-            &"u64" => sum!(values, u64),
-            &"i64" => sum!(values, i64),
-            &"u128" => sum!(values, u128),
-            &"i128" => sum!(values, i128),
-            &"usize" => sum!(values, usize),
-            &"isize" => sum!(values, isize),
+        match typ[0] {
+            "u8" => sum!(values, u8),
+            "i8" => sum!(values, i8),
+            "u16" => sum!(values, u16),
+            "i16" => sum!(values, i16),
+            "u32" => sum!(values, u32),
+            "i32" => sum!(values, i32),
+            "u64" => sum!(values, u64),
+            "i64" => sum!(values, i64),
+            "u128" => sum!(values, u128),
+            "i128" => sum!(values, i128),
+            "usize" => sum!(values, usize),
+            "isize" => sum!(values, isize),
             _ => format!(
                 "{} or {}",
                 NOT_EXIST_TYPE,
@@ -73,9 +71,9 @@ pub fn sum(mut v: Vec<&str>) -> String {
 
         }
     } else if vvc.iter().all(|r| is_float(&r) == true) {
-        match &typ[0] {
-            &"f32" => sum!(values, f32),
-            &"f64" => sum!(values, f64),
+        match typ[0] {
+            "f32" => sum!(values, f32),
+            "f64" => sum!(values, f64),
             _ => format!(
                 "{} or {}",
                 NOT_EXIST_TYPE,
@@ -89,35 +87,33 @@ pub fn sum(mut v: Vec<&str>) -> String {
 
 /// Return the product of numbers.
 /// ```no_run
-/// let test_v = vec!["%", "prod", "f64", "100.0", "0.75"];
+/// let test_v = vec!["f64", "100.0", "0.75"];
 /// assert_eq!(
 ///     prod(test_v),
 ///     "75".to_string()
 /// );
 /// ```
-pub fn prod(mut v: Vec<&str>) -> String {
-    let params: Vec<&str> = v.drain(2..).collect();
-
-    let (typ, values) = params.split_at(1);
+pub fn prod(v: Vec<&str>) -> String {
+    let (typ, values) = (&v[..1], &v[1..]);
 
     let vvc: Vec<Vec<char>> = values.iter()
         .map(|ref p| p.chars().collect())
         .collect();
 
     if vvc.iter().all(|r| is_integer(&r) == true) {
-        match &typ[0] {
-            &"u8" => product!(values, u8),
-            &"i8" => product!(values, i8),
-            &"u16" => product!(values, u16),
-            &"i16" => product!(values, i16),
-            &"u32" => product!(values, u32),
-            &"i32" => product!(values, i32),
-            &"u64" => product!(values, u64),
-            &"i64" => product!(values, i64),
-            &"u128" => product!(values, u128),
-            &"i128" => product!(values, i128),
-            &"usize" => product!(values, usize),
-            &"isize" => product!(values, isize),
+        match typ[0] {
+            "u8" => product!(values, u8),
+            "i8" => product!(values, i8),
+            "u16" => product!(values, u16),
+            "i16" => product!(values, i16),
+            "u32" => product!(values, u32),
+            "i32" => product!(values, i32),
+            "u64" => product!(values, u64),
+            "i64" => product!(values, i64),
+            "u128" => product!(values, u128),
+            "i128" => product!(values, i128),
+            "usize" => product!(values, usize),
+            "isize" => product!(values, isize),
             _ => format!(
                 "{} or {}",
                 NOT_EXIST_TYPE,
@@ -126,9 +122,9 @@ pub fn prod(mut v: Vec<&str>) -> String {
 
         }
     } else if vvc.iter().all(|r| is_float(&r) == true) {
-        match &typ[0] {
-            &"f32" => product!(values, f32),
-            &"f64" => product!(values, f64),
+        match typ[0] {
+            "f32" => product!(values, f32),
+            "f64" => product!(values, f64),
             _ => format!(
                 "{} or {}",
                 NOT_EXIST_TYPE,
