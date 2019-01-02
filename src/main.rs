@@ -5,11 +5,11 @@
 //! [Usage]
 //!     ....
 //!     ....
-//! umeboshi>> % echo Hello world!
+//! umeboshi>> echo Hello world!
 //! Hello world!
-//! umeboshi>> % sum u8 12 34
+//! umeboshi>> sum u8 12 34
 //! 46
-//! umeboshi>> % prod f64 100.0 0.75
+//! umeboshi>> prod f64 100.0 0.75
 //! 75
 //! umeboshi>> quit
 //! Bye!!
@@ -18,7 +18,10 @@
 use std::io::Write;
 use std::io;
 use termion::{color, style};
+use std::thread;
+use std::sync::mpsc;
 mod calc;
+
 
 const TITLE: &str = "
 \t*---------------------------*
@@ -32,67 +35,68 @@ const HELP: &str = r#"
     quit                    close shell.
     help or -h              help.
     version or -v           version information.
-    % [command]             % is calling function.
-    % echo [text]           output string.
-    % sum [type] 1 2 3 ...  output the sum of [type].
-        e.g.) % sum i32 1 2 3
-    % prod [type] 1 2 3 .. output the product of [type].
+    echo [text]             output string.
+    sum [type] 1 2 3 ...    output the sum of [type].
+        e.g.) sum i32 1 2 3
+    prod [type] 1 2 3 ..    output the product of [type].
 "#;
 
-/// Main Loop.
 fn main() {
-    println!(
-        "{}{}{}",
-        color::Fg(color::Red), 
-        TITLE, 
-        style::Reset
-    );
+    println!("{}{}{}",
+             color::Fg(color::Red),
+             TITLE,
+             style::Reset
+             );
+
+    let (sender, receiver) = mpsc::channel();
+
     loop {
         let mut s = String::new();
-        print!(
-            "{}{}{}", 
-            color::Fg(color::Red),
-            PRIMARY_PROMPT, 
-            style::Reset, 
-        );
-        io::stdout().flush().expect("Couldn't flush stdout");
+        print!("{}{}{}",
+               color::Fg(color::Red),
+               PRIMARY_PROMPT,
+               style::Reset
+               );
+        io::stdout().flush().expect("Couldn't flush stdout.");
         io::stdin().read_line(&mut s).expect("Failed.");
 
-        let v: Vec<&str> = s.trim().split_whitespace().collect();
-        let (head, tail) = (&v[..1], &v[1..]);
-
-        match head[0] {
+        match &*s.trim() {
             "quit" => {
-                println!("Bye!!");
+                println!("Bye!");
                 break;
+            },
+            "help"|"-h" => {
+                println!("{}{}{}",
+                        color::Fg(color::Cyan),
+                        HELP,
+                        style::Reset);
+                continue;
             },
             "version"|"-v" => {
                 println!("{}", VERSION);
                 continue;
             },
-            "help"|"-h" => {
-                println!("{}{}{}", color::Fg(color::Cyan), HELP, style::Reset);
-                continue;
-            },
-            "%" => {
-                println!("{}", bind_func(tail));
-                continue;
-            },
             _ => {
-                println!(
-                    "\tPlease input{} {} help{}", 
-                    color::Fg(color::LightYellow), 
-                    PRIMARY_PROMPT, 
-                    style::Reset
-                );
-                continue;
+                let sender = sender.clone();
+                thread::spawn(move || {
+                    sender.send(s).unwrap();
+                });
             }
         }
+        let receive = receiver.recv().unwrap();
+        println!("{}", bind_func(receive));
+        continue;
     }
 }
 
-/// Distinction of some functions.
-fn bind_func<'a>(v: &[&'a str]) -> String {
+/// Bind some functions.
+fn bind_func(s: String) -> String {
+    let mut v: Vec<&str> = s.trim()
+        .split_whitespace()
+        .collect();
+
+    v.shrink_to_fit();
+
     let (cmd, params) = (&v[..1], &v[1..]);
     match cmd[0] {
         "echo" => format!("{}", params.join(&" ")),

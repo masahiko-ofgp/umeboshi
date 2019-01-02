@@ -2,6 +2,7 @@
 // This is a library for handling chars.
 // `is_integer` validate whether it is integer.
 // `is_float` validate whether it is float.
+
 use onigiri::validator::{is_integer, is_float};
 
 const NOT_NUMBER: &str = "Contain not-number.";
