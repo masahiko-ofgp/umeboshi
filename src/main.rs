@@ -18,43 +18,17 @@
 use std::io::Write;
 use std::io;
 use termion::{color, style};
-use std::thread;
-use std::sync::mpsc;
 mod calc;
 
-
-const TITLE: &str = "
-\t*---------------------------*
-\t|        umeboshi           |
-\t*---------------------------*
-";
 const VERSION: &str = "0.1.0";
-const PRIMARY_PROMPT: &str = "umeboshi>> ";
-const HELP: &str = r#"
-    [Usage]
-    quit                    close shell.
-    help or -h              help.
-    version or -v           version information.
-    echo [text]             output string.
-    sum [type] 1 2 3 ...    output the sum of [type].
-        e.g.) sum i32 1 2 3
-    prod [type] 1 2 3 ..    output the product of [type].
-"#;
 
 fn main() {
-    println!("{}{}{}",
-             color::Fg(color::Red),
-             TITLE,
-             style::Reset
-             );
-
-    let (sender, receiver) = mpsc::channel();
-
+    title();
+    
     loop {
         let mut s = String::new();
-        print!("{}{}{}",
+        print!("{}umeboshi>> {}",
                color::Fg(color::Red),
-               PRIMARY_PROMPT,
                style::Reset
                );
         io::stdout().flush().expect("Couldn't flush stdout.");
@@ -65,27 +39,11 @@ fn main() {
                 println!("Bye!");
                 break;
             },
-            "help"|"-h" => {
-                println!("{}{}{}",
-                        color::Fg(color::Cyan),
-                        HELP,
-                        style::Reset);
-                continue;
-            },
-            "version"|"-v" => {
-                println!("{}", VERSION);
-                continue;
-            },
             _ => {
-                let sender = sender.clone();
-                thread::spawn(move || {
-                    sender.send(s).unwrap();
-                });
+                println!("{}", bind_func(s));
+                continue;
             }
         }
-        let receive = receiver.recv().unwrap();
-        println!("{}", bind_func(receive));
-        continue;
     }
 }
 
@@ -99,9 +57,45 @@ fn bind_func(s: String) -> String {
 
     let (cmd, params) = (&v[..1], &v[1..]);
     match cmd[0] {
+        "version"|"-v" => format!("{}", VERSION),
+        "help"|"-h" => help(),
         "echo" => format!("{}", params.join(&" ")),
         "sum" => calc::sum(params.to_vec()),
         "prod" => calc::prod(params.to_vec()),
-        _ => format!("Not exist its command."),
+        //_ => format!("Not exist its command."),
+        _ => format!("cmd: {:?} params: {:?}", cmd, params)
     }
+}
+
+// Display Title
+fn title() {
+    let title_text = "
+\t*---------------------------*
+\t|        umeboshi           |
+\t*---------------------------*
+    ";
+    println!("{}{}{}",
+            color::Fg(color::Red),
+            title_text,
+            style::Reset
+            );
+}
+
+// Display Help
+fn help() -> String {
+    let help_text = r#"
+    [Usage]
+    quit                    close shell.
+    help or -h              help.
+    version or -v           version information.
+    echo [text]             output string.
+    sum [type] 1 2 3 ...    output the sum of [type].
+        e.g.) sum i32 1 2 3
+    prod [type] 1 2 3 ..    output the product of [type].
+    "#;
+    format!("{}{}{}",
+           color::Fg(color::Cyan),
+           help_text,
+           style::Reset
+           )
 }
