@@ -10,4 +10,5 @@ description = "Interactive shell."
 
 [dependencies]
 termion = "1.5.1"
+lazy_static = "1.2.0"
 onigiri = "0.1.11"

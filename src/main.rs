@@ -17,14 +17,28 @@
 
 use std::io::Write;
 use std::io;
+use std::sync::RwLock;
+use std::collections::HashMap;
 use termion::{color, style};
+#[macro_use]
+extern crate lazy_static;
 mod calc;
 
 const VERSION: &str = "0.1.0";
 
+// I try to make global and mutable hashmap. Correct?
+// TODO: I must study it more.
+lazy_static! {
+    static ref VARS: RwLock<HashMap<String, String>> = {
+        let mut vars = HashMap::new();
+        vars.insert("default".to_string(), "None".to_string());
+        RwLock::new(vars)
+    };
+}
+
 fn main() {
     title();
-    
+
     loop {
         let mut s = String::new();
         print!("{}umeboshi>> {}",
@@ -47,6 +61,21 @@ fn main() {
     }
 }
 
+// TODO: It works. But this function is still under develop.
+fn getv<'a>(key: &'a str) -> String {
+    let vars = VARS.read().unwrap();
+    match vars.get(&key.to_string()) {
+        None => vars.get(&"default".to_string()).unwrap().to_string(),
+        Some(r) => r.to_string()
+    }
+}
+
+// TODO: It works. But this function is still under develop.
+fn setv<'a>(key: &'a str, value: &'a str) {
+    let mut vars = VARS.write().unwrap();
+    vars.insert(key.to_string(), value.to_string());
+}
+
 /// Bind some functions.
 fn bind_func(s: String) -> String {
     let mut v: Vec<&str> = s.trim()
@@ -62,7 +91,12 @@ fn bind_func(s: String) -> String {
         "echo" => format!("{}", params.join(&" ")),
         "sum" => calc::sum(params.to_vec()),
         "prod" => calc::prod(params.to_vec()),
-        //_ => format!("Not exist its command."),
+        "getv" => getv(params[0]),
+        // TODO: I must modified "Ok".to_string" line.
+        "setv" => {
+            setv(params[0], params[1]);
+            "Ok".to_string()
+        },
         _ => format!("cmd: {:?} params: {:?}", cmd, params)
     }
 }
