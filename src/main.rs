@@ -65,7 +65,7 @@ fn main() {
 fn getv<'a>(key: &'a str) -> String {
     let vars = VARS.read().unwrap();
     match vars.get(&key.to_string()) {
-        None => vars.get(&"default".to_string()).unwrap().to_string(),
+        None => getv(&"default".to_string()),
         Some(r) => r.to_string()
     }
 }
@@ -83,21 +83,24 @@ fn bind_func(s: String) -> String {
         .collect();
 
     v.shrink_to_fit();
-
-    let (cmd, params) = (&v[..1], &v[1..]);
-    match cmd[0] {
-        "version"|"-v" => format!("{}", VERSION),
-        "help"|"-h" => help(),
-        "echo" => format!("{}", params.join(&" ")),
-        "sum" => calc::sum(params.to_vec()),
-        "prod" => calc::prod(params.to_vec()),
-        "getv" => getv(params[0]),
-        // TODO: I must modified "Ok".to_string" line.
-        "setv" => {
-            setv(params[0], params[1]);
-            "Ok".to_string()
-        },
-        _ => format!("cmd: {:?} params: {:?}", cmd, params)
+    if v.len() > 1 {
+        let (cmd, params) = (&v[..1], &v[1..]);
+        match cmd[0] {
+            "version"|"-v" => format!("{}", VERSION),
+            "help"|"-h" => help(),
+            "echo" => format!("{}", params.join(&" ")),
+            "sum" => calc::sum(params.to_vec()),
+            "prod" => calc::prod(params.to_vec()),
+            "getv" => getv(params[0]),
+            // TODO: I must modified "Ok".to_string" line.
+            "setv" => {
+                setv(params[0], params[1]);
+                "Ok".to_string()
+            },
+            _ => format!("cmd: {:?} params: {:?}", cmd, params)
+        }
+    } else {
+        "Error: Not exist command or any parameters.".to_string()
     }
 }
 
