@@ -23,10 +23,10 @@ use termion::{color, style};
 #[macro_use]
 extern crate lazy_static;
 mod calc;
+mod info;
 
 const VERSION: &str = "0.1.0";
 
-// I try to make global and mutable hashmap. Correct?
 // TODO: I must study it more.
 lazy_static! {
     static ref VARS: RwLock<HashMap<String, String>> = {
@@ -36,8 +36,57 @@ lazy_static! {
     };
 }
 
+// TODO: It works. But this function is still under develop.
+fn getv<'a>(key: &'a str) -> Option<String> {
+    let vars = VARS.read().unwrap();
+    match vars.get(&key.to_string()) {
+        Some(r) => Some(r.to_string()),
+        None => None
+    }
+}
+
+// TODO: It works. But this function is still under develop.
+fn setv(key: String, value: String) {
+    let mut vars = VARS.write().unwrap();
+    vars.insert(key, value);
+}
+
+#[derive(PartialEq)]
+enum UmeboshiCmd<'u> {
+    Help,
+    Version,
+    Echo(Vec<&'u str>),
+    Sum(Vec<&'u str>),
+    Prod(Vec<&'u str>),
+    Getv(Vec<&'u str>),
+    Setv(Vec<&'u str>),
+}
+
+impl<'u> UmeboshiCmd<'u> {
+    fn run(self) {
+        let result = match self {
+            UmeboshiCmd::Help => info::help(),
+            UmeboshiCmd::Version => format!("{}", VERSION),
+            UmeboshiCmd::Echo(e) => e.join(" ").to_string(),
+            UmeboshiCmd::Sum(n) => calc::sum(n),
+            UmeboshiCmd::Prod(p) => calc::prod(p),
+            UmeboshiCmd::Getv(g) => {
+                match getv(g[0]) {
+                    Some(v) => v,
+                    None => getv("default").unwrap(),
+                }
+            },
+            UmeboshiCmd::Setv(s) => {
+                setv(s[0].to_string(), s[1].to_string());
+                format!("Ok")
+            },
+        };
+        println!("{}", result);
+    }
+}
+
 fn main() {
-    title();
+    info::title();
 
     loop {
         let mut s = String::new();
@@ -48,91 +97,46 @@ fn main() {
         io::stdout().flush().expect("Couldn't flush stdout.");
         io::stdin().read_line(&mut s).expect("Failed.");
 
-        match &*s.trim() {
+        let v: Vec<&str> = s.trim().split_whitespace().collect();
+
+        let (cmd, params) = (&v[..1], &v[1..]);
+
+        match cmd[0] {
             "quit" => {
                 println!("Bye!");
                 break;
             },
-            _ => {
-                println!("{}", bind_func(s));
+            "help"|"-h" => {
+                UmeboshiCmd::Help.run();
                 continue;
+            },
+            "version"|"-v" => {
+                UmeboshiCmd::Version.run();
+                continue;
+            },
+            "echo" => {
+                UmeboshiCmd::Echo(params.to_vec()).run();
+                continue;
+            },
+            "sum" => {
+                UmeboshiCmd::Sum(params.to_vec()).run();
+                continue;
+            },
+            "prod" => {
+                UmeboshiCmd::Prod(params.to_vec()).run();
+                continue;
+            },
+            "getv" => {
+                UmeboshiCmd::Getv(params.to_vec()).run();
+                continue;
+            },
+            "setv" => {
+                UmeboshiCmd::Setv(params.to_vec()).run();
+                continue;
+            },
+            _ => {
+                break;
             }
         }
     }
-}
-
-// TODO: It works. But this function is still under develop.
-fn getv<'a>(key: &'a str) -> String {
-    let vars = VARS.read().unwrap();
-    match vars.get(&key.to_string()) {
-        None => getv(&"default".to_string()),
-        Some(r) => r.to_string()
-    }
-}
-
-// TODO: It works. But this function is still under develop.
-fn setv<'a>(key: &'a str, value: &'a str) {
-    let mut vars = VARS.write().unwrap();
-    vars.insert(key.to_string(), value.to_string());
-}
-
-/// Bind some functions.
-fn bind_func(s: String) -> String {
-    let mut v: Vec<&str> = s.trim()
-        .split_whitespace()
-        .collect();
-
-    v.shrink_to_fit();
-    if v.len() > 1 {
-        let (cmd, params) = (&v[..1], &v[1..]);
-        match cmd[0] {
-            "version"|"-v" => format!("{}", VERSION),
-            "help"|"-h" => help(),
-            "echo" => format!("{}", params.join(&" ")),
-            "sum" => calc::sum(params.to_vec()),
-            "prod" => calc::prod(params.to_vec()),
-            "getv" => getv(params[0]),
-            // TODO: I must modified "Ok".to_string" line.
-            "setv" => {
-                setv(params[0], params[1]);
-                "Ok".to_string()
-            },
-            _ => format!("cmd: {:?} params: {:?}", cmd, params)
-        }
-    } else {
-        "Error: Not exist command or any parameters.".to_string()
-    }
-}
-
-// Display Title
-fn title() {
-    let title_text = "
-\t*---------------------------*
-\t|        umeboshi           |
-\t*---------------------------*
-    ";
-    println!("{}{}{}",
-            color::Fg(color::Red),
-            title_text,
-            style::Reset
-            );
-}
-
-// Display Help
-fn help() -> String {
-    let help_text = r#"
-    [Usage]
-    quit                    close shell.
-    help or -h              help.
-    version or -v           version information.
-    echo [text]             output string.
-    sum [type] 1 2 3 ...    output the sum of [type].
-        e.g.) sum i32 1 2 3
-    prod [type] 1 2 3 ..    output the product of [type].
-    "#;
-    format!("{}{}{}",
-           color::Fg(color::Cyan),
-           help_text,
-           style::Reset
-           )
 }
