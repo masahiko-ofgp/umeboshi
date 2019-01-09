@@ -11,6 +11,10 @@
 //! 46
 //! umeboshi>> prod f64 100.0 0.75
 //! 75
+//! umeboshi>> setv x 23
+//! Ok
+//! umeboshi>> prod u32 $x 2
+//! 46
 //! umeboshi>> quit
 //! Bye!!
 //! ```
@@ -20,12 +24,14 @@ use std::io;
 use std::sync::RwLock;
 use std::collections::HashMap;
 use termion::{color, style};
+use onigiri::tools::chars_to_string;
 #[macro_use]
 extern crate lazy_static;
 mod calc;
 mod info;
 
 const VERSION: &str = "0.1.0";
+
 
 // TODO: I must study it more.
 lazy_static! {
@@ -36,33 +42,45 @@ lazy_static! {
     };
 }
 
-// TODO: It works. But this function is still under develop.
-fn getv<'a>(key: &'a str) -> Option<String> {
+// Get value from varibable name.
+fn getv(key: String) -> Option<String> {
     let vars = VARS.read().unwrap();
-    match vars.get(&key.to_string()) {
+    match vars.get(&key) {
         Some(r) => Some(r.to_string()),
         None => None
     }
 }
 
-// TODO: It works. But this function is still under develop.
+// Set variable.
 fn setv(key: String, value: String) {
     let mut vars = VARS.write().unwrap();
     vars.insert(key, value);
 }
 
-#[derive(PartialEq)]
-enum UmeboshiCmd<'u> {
-    Help,
-    Version,
-    Echo(Vec<&'u str>),
-    Sum(Vec<&'u str>),
-    Prod(Vec<&'u str>),
-    Getv(Vec<&'u str>),
-    Setv(Vec<&'u str>),
+// Replace variable to value.
+fn v2v(s: String) -> String {
+    let chars: Vec<char> = s.chars().collect();
+    match chars[0] {
+        '$' => {
+            let var_name = chars_to_string(&(chars[1..]).to_vec());
+            getv(var_name).unwrap()
+        },
+        _ => s
+    }
 }
 
-impl<'u> UmeboshiCmd<'u> {
+#[derive(PartialEq)]
+enum UmeboshiCmd {
+    Help,
+    Version,
+    Echo(Vec<String>),
+    Sum(Vec<String>),
+    Prod(Vec<String>),
+    Getv(Vec<String>),
+    Setv(Vec<String>),
+}
+
+impl UmeboshiCmd {
     fn run(self) {
         let result = match self {
             UmeboshiCmd::Help => info::help(),
@@ -71,9 +89,9 @@ impl<'u> UmeboshiCmd<'u> {
             UmeboshiCmd::Sum(n) => calc::sum(n),
             UmeboshiCmd::Prod(p) => calc::prod(p),
             UmeboshiCmd::Getv(g) => {
-                match getv(g[0]) {
+                match getv(g[0].to_string()) {
                     Some(v) => v,
-                    None => getv("default").unwrap(),
+                    None => getv("default".to_string()).unwrap(),
                 }
             },
             UmeboshiCmd::Setv(s) => {
@@ -97,11 +115,12 @@ fn main() {
         io::stdout().flush().expect("Couldn't flush stdout.");
         io::stdin().read_line(&mut s).expect("Failed.");
 
-        let v: Vec<&str> = s.trim().split_whitespace().collect();
+        let mut v: Vec<&str> = s.trim().split_whitespace().collect();
 
-        let (cmd, params) = (&v[..1], &v[1..]);
+        let cmd = v[0];
+        let params: Vec<String> = v[1..].iter_mut().map(|p| v2v(p.to_string())).collect();
 
-        match cmd[0] {
+        match cmd {
             "quit" => {
                 println!("Bye!");
                 break;
@@ -115,23 +134,23 @@ fn main() {
                 continue;
             },
             "echo" => {
-                UmeboshiCmd::Echo(params.to_vec()).run();
+                UmeboshiCmd::Echo(params).run();
                 continue;
             },
             "sum" => {
-                UmeboshiCmd::Sum(params.to_vec()).run();
+                UmeboshiCmd::Sum(params).run();
                 continue;
             },
             "prod" => {
-                UmeboshiCmd::Prod(params.to_vec()).run();
+                UmeboshiCmd::Prod(params).run();
                 continue;
             },
             "getv" => {
-                UmeboshiCmd::Getv(params.to_vec()).run();
+                UmeboshiCmd::Getv(params).run();
                 continue;
             },
             "setv" => {
-                UmeboshiCmd::Setv(params.to_vec()).run();
+                UmeboshiCmd::Setv(params).run();
                 continue;
             },
             _ => {

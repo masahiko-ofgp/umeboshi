@@ -40,7 +40,7 @@ macro_rules! product {
 /// );
 /// ```
 /// If you don't input "u8", Error. 
-pub fn sum(v: Vec<&str>) -> String {
+pub fn sum(v: Vec<String>) -> String {
     let (typ, values) = (&v[..1], &v[1..]);
 
     let vvc: Vec<Vec<char>> = values.iter()
@@ -51,7 +51,7 @@ pub fn sum(v: Vec<&str>) -> String {
     // return error string-message. And main loop continue.
     // Therefore, I don't use Result.
     if vvc.iter().all(|r| is_integer(&r) == true) {
-        match typ[0] {
+        match typ[0].as_str() {
             "u8" => sum!(values, u8),
             "i8" => sum!(values, i8),
             "u16" => sum!(values, u16),
@@ -72,7 +72,7 @@ pub fn sum(v: Vec<&str>) -> String {
 
         }
     } else if vvc.iter().all(|r| is_float(&r) == true) {
-        match typ[0] {
+        match typ[0].as_str() {
             "f32" => sum!(values, f32),
             "f64" => sum!(values, f64),
             _ => format!(
@@ -94,7 +94,7 @@ pub fn sum(v: Vec<&str>) -> String {
 ///     "75".to_string()
 /// );
 /// ```
-pub fn prod(v: Vec<&str>) -> String {
+pub fn prod(v: Vec<String>) -> String {
     let (typ, values) = (&v[..1], &v[1..]);
 
     let vvc: Vec<Vec<char>> = values.iter()
@@ -102,7 +102,7 @@ pub fn prod(v: Vec<&str>) -> String {
         .collect();
 
     if vvc.iter().all(|r| is_integer(&r) == true) {
-        match typ[0] {
+        match typ[0].as_str() {
             "u8" => product!(values, u8),
             "i8" => product!(values, i8),
             "u16" => product!(values, u16),
@@ -123,7 +123,7 @@ pub fn prod(v: Vec<&str>) -> String {
 
         }
     } else if vvc.iter().all(|r| is_float(&r) == true) {
-        match typ[0] {
+        match typ[0].as_str() {
             "f32" => product!(values, f32),
             "f64" => product!(values, f64),
             _ => format!(

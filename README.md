@@ -6,7 +6,7 @@ Umeboshi is japanese apricot pickles. I like :)
 
 This application is my interactive shell.
 
-Now, umeboshi has 6 commands.
+Now, umeboshi has 8 commands. But this is still under develop.
 
 - echo
 - quit
@@ -14,6 +14,15 @@ Now, umeboshi has 6 commands.
 - version
 - sum
 - prod
+- getv
+- setv
+
+## Variable usage
+
+    umeboshi>> setv var_name 123
+    Ok
+    umeboshi>> sum u32 $var_name 321
+    444
 
 ## Example
 
