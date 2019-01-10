@@ -1,34 +1,14 @@
-//! Umeboshi is small interactive shell.
-//! Now, it has 6 commands.
-//! ```no_run
-//! umeboshi>> help
-//! [Usage]
-//!     ....
-//!     ....
-//! umeboshi>> echo Hello world!
-//! Hello world!
-//! umeboshi>> sum u8 12 34
-//! 46
-//! umeboshi>> prod f64 100.0 0.75
-//! 75
-//! umeboshi>> setv x 23
-//! Ok
-//! umeboshi>> prod u32 $x 2
-//! 46
-//! umeboshi>> quit
-//! Bye!!
-//! ```
+// Umeboshi is small interactive shell.
 
-use std::io::Write;
-use std::io;
 use std::sync::RwLock;
 use std::collections::HashMap;
-use termion::{color, style};
 use onigiri::tools::chars_to_string;
+
 #[macro_use]
 extern crate lazy_static;
+
 mod calc;
-mod info;
+mod base;
 
 const VERSION: &str = "0.1.0";
 
@@ -70,55 +50,69 @@ fn v2v(s: String) -> String {
 }
 
 #[derive(PartialEq)]
-enum UmeboshiCmd {
-    Help,
-    Version,
-    Echo(Vec<String>),
-    Sum(Vec<String>),
-    Prod(Vec<String>),
-    Getv(Vec<String>),
-    Setv(Vec<String>),
+struct UmeboshiCmd {
+    cmd: String,
+    params: Vec<String>,
 }
 
 impl UmeboshiCmd {
-    fn run(self) {
-        let result = match self {
-            UmeboshiCmd::Help => info::help(),
-            UmeboshiCmd::Version => format!("{}", VERSION),
-            UmeboshiCmd::Echo(e) => e.join(" ").to_string(),
-            UmeboshiCmd::Sum(n) => calc::sum(n),
-            UmeboshiCmd::Prod(p) => calc::prod(p),
-            UmeboshiCmd::Getv(g) => {
-                match getv(g[0].to_string()) {
-                    Some(v) => v,
-                    None => getv("default".to_string()).unwrap(),
+    fn new(cmd: String, params: Vec<String>) -> UmeboshiCmd {
+        UmeboshiCmd {cmd: cmd, params: params}
+    }
+    fn run(&mut self) -> Option<String> {
+        match self.cmd.as_str() {
+            "echo" => Some(self.params.join(" ").to_string()),
+            "sum" => Some(calc::sum(&self.params)),
+            "prod" => Some(calc::prod(&self.params)),
+            "getv" => {
+                match getv(self.params[0].to_string()) {
+                    Some(v) => Some(v),
+                    None => Some(getv("default".to_string()).unwrap()),
                 }
             },
-            UmeboshiCmd::Setv(s) => {
-                setv(s[0].to_string(), s[1].to_string());
-                format!("Ok")
+            "setv" => {
+                setv(self.params[0].to_string(), self.params[1].to_string());
+                Some(format!("Ok"))
             },
+            _ => None,
+        }
+    }
+}
+
+#[derive(PartialEq)]
+enum UmeboshiMenu {
+    Help,
+    Version,
+    Cmd(UmeboshiCmd),
+}
+
+impl UmeboshiMenu {
+    fn run(self) {
+        let result = match self {
+            UmeboshiMenu::Help => base::help(),
+            UmeboshiMenu::Version => format!("{}", VERSION),
+            UmeboshiMenu::Cmd(mut c) => c.run().unwrap(), 
         };
         println!("{}", result);
     }
 }
 
-fn main() {
-    info::title();
-
-    loop {
-        let mut s = String::new();
-        print!("{}umeboshi>> {}",
-               color::Fg(color::Red),
-               style::Reset
-               );
-        io::stdout().flush().expect("Couldn't flush stdout.");
-        io::stdin().read_line(&mut s).expect("Failed.");
-
-        let mut v: Vec<&str> = s.trim().split_whitespace().collect();
-
+macro_rules! ume {
+    ( $s:expr ) => ({
+        let mut v: Vec<&str> = $s.trim().split_whitespace().collect();
         let cmd = v[0];
-        let params: Vec<String> = v[1..].iter_mut().map(|p| v2v(p.to_string())).collect();
+        let params: Vec<String> = v[1..].iter_mut()
+            .map(|p| v2v(p.to_string()))
+            .collect();
+        (cmd, params)
+    });
+}
+
+fn main() {
+    base::title();
+    loop {
+        let s = base::prompt();
+        let (cmd, params) = ume!(s);
 
         match cmd {
             "quit" => {
@@ -126,35 +120,16 @@ fn main() {
                 break;
             },
             "help"|"-h" => {
-                UmeboshiCmd::Help.run();
+                UmeboshiMenu::Help.run();
                 continue;
             },
             "version"|"-v" => {
-                UmeboshiCmd::Version.run();
-                continue;
-            },
-            "echo" => {
-                UmeboshiCmd::Echo(params).run();
-                continue;
-            },
-            "sum" => {
-                UmeboshiCmd::Sum(params).run();
-                continue;
-            },
-            "prod" => {
-                UmeboshiCmd::Prod(params).run();
-                continue;
-            },
-            "getv" => {
-                UmeboshiCmd::Getv(params).run();
-                continue;
-            },
-            "setv" => {
-                UmeboshiCmd::Setv(params).run();
+                UmeboshiMenu::Version.run();
                 continue;
             },
             _ => {
-                break;
+                UmeboshiMenu::Cmd(UmeboshiCmd::new(cmd.to_string(), params)).run();
+                continue;
             }
         }
     }

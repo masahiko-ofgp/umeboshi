@@ -40,7 +40,7 @@ macro_rules! product {
 /// );
 /// ```
 /// If you don't input "u8", Error. 
-pub fn sum(v: Vec<String>) -> String {
+pub fn sum(v: &Vec<String>) -> String {
     let (typ, values) = (&v[..1], &v[1..]);
 
     let vvc: Vec<Vec<char>> = values.iter()
@@ -94,7 +94,7 @@ pub fn sum(v: Vec<String>) -> String {
 ///     "75".to_string()
 /// );
 /// ```
-pub fn prod(v: Vec<String>) -> String {
+pub fn prod(v: &Vec<String>) -> String {
     let (typ, values) = (&v[..1], &v[1..]);
 
     let vvc: Vec<Vec<char>> = values.iter()
