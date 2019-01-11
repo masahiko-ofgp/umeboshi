@@ -74,26 +74,11 @@ impl UmeboshiCmd {
                 setv(self.params[0].to_string(), self.params[1].to_string());
                 Some(format!("Ok"))
             },
+            "help"|"-h" => Some(base::help()),
+            "Version"|"-v" => Some(format!("{}", VERSION)),
+            "quit" => None,
             _ => None,
         }
-    }
-}
-
-#[derive(PartialEq)]
-enum UmeboshiMenu {
-    Help,
-    Version,
-    Cmd(UmeboshiCmd),
-}
-
-impl UmeboshiMenu {
-    fn run(self) {
-        let result = match self {
-            UmeboshiMenu::Help => base::help(),
-            UmeboshiMenu::Version => format!("{}", VERSION),
-            UmeboshiMenu::Cmd(mut c) => c.run().unwrap(), 
-        };
-        println!("{}", result);
     }
 }
 
@@ -104,7 +89,8 @@ macro_rules! ume {
         let params: Vec<String> = v[1..].iter_mut()
             .map(|p| v2v(p.to_string()))
             .collect();
-        (cmd, params)
+        let umeboshicmd = UmeboshiCmd::new(cmd.to_string(), params);
+        umeboshicmd
     });
 }
 
@@ -112,25 +98,12 @@ fn main() {
     base::title();
     loop {
         let s = base::prompt();
-        let (cmd, params) = ume!(s);
-
-        match cmd {
-            "quit" => {
-                println!("Bye!");
-                break;
-            },
-            "help"|"-h" => {
-                UmeboshiMenu::Help.run();
+        match ume!(s).run() {
+            Some(u) => {
+                println!("{}", u);
                 continue;
             },
-            "version"|"-v" => {
-                UmeboshiMenu::Version.run();
-                continue;
-            },
-            _ => {
-                UmeboshiMenu::Cmd(UmeboshiCmd::new(cmd.to_string(), params)).run();
-                continue;
-            }
+            None => break,
         }
     }
 }
