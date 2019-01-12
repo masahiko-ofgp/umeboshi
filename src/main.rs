@@ -60,7 +60,7 @@ impl UmeboshiCmd {
         UmeboshiCmd {cmd: cmd, params: params}
     }
     fn run(&mut self) -> Option<String> {
-        match self.cmd.as_str() {
+        match self.cmd.as_str(){
             "echo" => Some(self.params.join(" ").to_string()),
             "sum" => Some(calc::sum(&self.params)),
             "prod" => Some(calc::prod(&self.params)),
@@ -75,30 +75,30 @@ impl UmeboshiCmd {
                 Some(format!("Ok"))
             },
             "help"|"-h" => Some(base::help()),
-            "Version"|"-v" => Some(format!("{}", VERSION)),
+            "version"|"-v" => Some(format!("{}", VERSION)),
             "quit" => None,
             _ => None,
         }
     }
 }
 
-macro_rules! ume {
-    ( $s:expr ) => ({
-        let mut v: Vec<&str> = $s.trim().split_whitespace().collect();
-        let cmd = v[0];
-        let params: Vec<String> = v[1..].iter_mut()
-            .map(|p| v2v(p.to_string()))
-            .collect();
-        let umeboshicmd = UmeboshiCmd::new(cmd.to_string(), params);
-        umeboshicmd
-    });
+// Create UmeboshiCmd from input-String.
+fn ume<'u>(input: &'u str) -> UmeboshiCmd {
+    let mut v: Vec<&str> = input.trim().split_whitespace().collect();
+    let cmd = v[0];
+    let params: Vec<String> = v[1..].iter_mut()
+        .map(|p| v2v(p.to_string()))
+        .collect();
+    let umeboshicmd = UmeboshiCmd::new(cmd.to_string(), params);
+    umeboshicmd
 }
 
+// Main Loop
 fn main() {
     base::title();
     loop {
         let s = base::prompt();
-        match ume!(s).run() {
+        match ume(&s).run() {
             Some(u) => {
                 println!("{}", u);
                 continue;
