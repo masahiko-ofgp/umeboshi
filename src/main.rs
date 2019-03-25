@@ -1,5 +1,13 @@
-// Umeboshi is small interactive shell.
+// Copyright 2019 Masahiko Hamazawa
+//
+// Licensed under the MIT license <LICENSE or
+//  http://opensource.org/licenses/MIT>.
+// This file may not be copied, modified, on distributed except
+//  according to thise terms.
 
+use termion::{color, style};
+use std::io;
+use std::io::Write;
 use std::sync::RwLock;
 use std::collections::HashMap;
 use onigiri::tools::chars_to_string;
@@ -8,16 +16,29 @@ use onigiri::tools::chars_to_string;
 extern crate lazy_static;
 
 mod calc;
-mod base;
 
 const VERSION: &str = "0.1.0";
-
+const TITLE: &str = "
+\t*--------------------*
+\t|      umeboshi      |
+\t*--------------------*
+";
+const HELP: &str = r#"
+    [Usage]
+    quit                    close shell.
+    help or -h              help.
+    version or -v           version information.
+    echo [text]             output string.
+    sum [type] 1 2 3 ...    output the sum of [type].
+        e.g.) sum i32 1 2 3
+    prod [type] 1 2 3 ..    output the product of [type].
+    "#;
 
 // TODO: I must study it more.
 lazy_static! {
     static ref VARS: RwLock<HashMap<String, String>> = {
         let mut vars = HashMap::new();
-        vars.insert("default".to_string(), "None".to_string());
+        vars.insert("none".to_string(), "None".to_string());
         RwLock::new(vars)
     };
 }
@@ -49,61 +70,78 @@ fn v2v(s: String) -> String {
     }
 }
 
-#[derive(PartialEq)]
-struct UmeboshiCmd {
-    cmd: String,
-    params: Vec<String>,
-}
-
-impl UmeboshiCmd {
-    fn new(cmd: String, params: Vec<String>) -> UmeboshiCmd {
-        UmeboshiCmd {cmd: cmd, params: params}
-    }
-    fn run(&mut self) -> Option<String> {
-        match self.cmd.as_str(){
-            "echo" => Some(self.params.join(" ").to_string()),
-            "sum" => Some(calc::sum(&self.params)),
-            "prod" => Some(calc::prod(&self.params)),
-            "getv" => {
-                match getv(self.params[0].to_string()) {
-                    Some(v) => Some(v),
-                    None => Some(getv("default".to_string()).unwrap()),
-                }
-            },
-            "setv" => {
-                setv(self.params[0].to_string(), self.params[1].to_string());
-                Some(format!("Ok"))
-            },
-            "help"|"-h" => Some(base::help()),
-            "version"|"-v" => Some(format!("{}", VERSION)),
-            "quit" => None,
-            _ => None,
-        }
-    }
-}
 
 // Create UmeboshiCmd from input-String.
-fn ume<'u>(input: &'u str) -> UmeboshiCmd {
-    let mut v: Vec<&str> = input.trim().split_whitespace().collect();
+/*fn ume<'u>(input: &'u str) -> UmeboshiCmd {
     let cmd = v[0];
     let params: Vec<String> = v[1..].iter_mut()
         .map(|p| v2v(p.to_string()))
         .collect();
-    let umeboshicmd = UmeboshiCmd::new(cmd.to_string(), params);
-    umeboshicmd
+    UmeboshiCmd {cmd: cmd.to_string(), params: params}
+}*/
+#[derive(Debug, PartialEq)]
+enum Token {
+    Id(String),
+    Sum,
+    Prod,
+    Echo,
+    Getv,
+    Setv,
+}
+
+fn tokenize<'t>(words: Vec<&'t str>) -> Vec<Token> {
+    let mut tokens: Vec<Token> = vec![];
+
+    for w in words {
+        match w {
+            "echo" => tokens.push(Token::Echo),
+            "sum" => tokens.push(Token::Sum),
+            "prod" => tokens.push(Token::Prod),
+            "getv" => tokens.push(Token::Getv),
+            "setv" => tokens.push(Token::Setv),
+            _ => tokens.push(Token::Id(w.to_string()))
+        }
+    }
+    tokens
 }
 
 // Main Loop
 fn main() {
-    base::title();
+    println!("{}{}{}",
+             color::Fg(color::Red),
+             TITLE,
+             style::Reset
+             );
     loop {
-        let s = base::prompt();
-        match ume(&s).run() {
-            Some(u) => {
-                println!("{}", u);
+        let mut s = String::new();
+        print!("{}umeboshi>> {}",
+               color::Fg(color::Red),
+               style::Reset
+               );
+        io::stdout().flush().expect("Couldn't flush stdout.");
+        io::stdin().read_line(&mut s).expect("Failed.");
+
+        let words: Vec<&str> = s.trim()
+            .split_whitespace()
+            .collect();
+
+        match &words[0] {
+            &"quit"|&":q" => break,
+            &"version"|&":v" => {
+                println!("{}", VERSION);
                 continue;
             },
-            None => break,
+            &"help"|&":h" => {
+                println!("{}{}{}",
+                         color::Fg(color::Cyan),
+                         HELP,
+                         style::Reset);
+                continue;
+            },
+            _ => {
+                println!("{:?}", tokenize(words));
+                continue;
+            }
         }
     }
 }
