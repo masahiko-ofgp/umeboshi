@@ -4,29 +4,22 @@
 
 Umeboshi is japanese apricot pickles. I like :)
 
-This application is my interactive shell.
+This application is a small language by using Reverse Polish Notation.
 
-Now, umeboshi has 8 commands. But this is still under develop.
+However, umeboshi is still under development :)
 
-- echo
-- quit
-- help
-- version
-- sum
-- prod
-- getv
-- setv
-
-## Variable usage
-
-    umeboshi>> setv var_name 123
-    Ok
-    umeboshi>> sum u32 $var_name 321
-    444
-
-## Example
+## Usage
 
     $ cargo run
 
-<img src="./imgs/screenshot-umeboshi.png" alt="umeboshi screenshot">
+    umeboshi>> Hello world!
+    Hello world!
+    umeboshi>> 1 2 +
+    3
+    umeboshi>> 1 2 + 3 ==
+    true
+    umeboshi>> 12 x bind
+
+    umeboshi>> 18 $x +
+    30
 

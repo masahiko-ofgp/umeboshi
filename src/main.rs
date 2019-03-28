@@ -8,16 +8,10 @@
 use termion::{color, style};
 use std::io;
 use std::io::Write;
-use std::sync::RwLock;
 use std::collections::HashMap;
-use onigiri::tools::chars_to_string;
+use std::ops::*;
 
-#[macro_use]
-extern crate lazy_static;
-
-mod calc;
-
-const VERSION: &str = "0.1.0";
+const VERSION: &str = "0.2.0";
 const TITLE: &str = "
 \t*--------------------*
 \t|      umeboshi      |
@@ -25,88 +19,171 @@ const TITLE: &str = "
 ";
 const HELP: &str = r#"
     [Usage]
-    quit                    close shell.
-    help or -h              help.
-    version or -v           version information.
-    echo [text]             output string.
-    sum [type] 1 2 3 ...    output the sum of [type].
-        e.g.) sum i32 1 2 3
-    prod [type] 1 2 3 ..    output the product of [type].
+    quit                    close umeboshi.
+    help                    help.
+    version                 version information.
+    e.g.)
+        1 2 + => 3
+        12 $x bind => define variable 'x'
+        3 4 * $x == => true
+        ...
     "#;
 
-// TODO: I must study it more.
-lazy_static! {
-    static ref VARS: RwLock<HashMap<String, String>> = {
-        let mut vars = HashMap::new();
-        vars.insert("none".to_string(), "None".to_string());
-        RwLock::new(vars)
-    };
-}
+#[derive(Debug, PartialEq, PartialOrd)]
+struct Object(String);
 
-// Get value from varibable name.
-fn getv(key: String) -> Option<String> {
-    let vars = VARS.read().unwrap();
-    match vars.get(&key) {
-        Some(r) => Some(r.to_string()),
-        None => None
+impl Object {
+    fn get_attr(&self) -> String {
+        format!("{}", self.0)
     }
 }
 
-// Set variable.
-fn setv(key: String, value: String) {
-    let mut vars = VARS.write().unwrap();
-    vars.insert(key, value);
+impl Add for Object {
+
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self {
+        let _x = self.0.parse::<f64>().unwrap();
+        let _y = rhs.0.parse::<f64>().unwrap();
+        Object((_x + _y).to_string())
+    }
 }
+
+impl Sub for Object {
+
+    type Output = Self;
+
+    fn sub(self, rhs: Self) -> Self {
+        let _x = self.0.parse::<f64>().unwrap();
+        let _y = rhs.0.parse::<f64>().unwrap();
+        Object((_x - _y).to_string())
+    }
+}
+
+impl Mul for Object {
+
+    type Output = Self;
+
+    fn mul(self, rhs: Self) -> Self {
+        let _x = self.0.parse::<f64>().unwrap();
+        let _y = rhs.0.parse::<f64>().unwrap();
+        Object((_x * _y).to_string())
+    }
+}
+
+impl Div for Object {
+
+    type Output = Self;
+
+    fn div(self, rhs: Self) -> Self {
+        let _x = self.0.parse::<f64>().unwrap();
+        let _y = rhs.0.parse::<f64>().unwrap();
+        Object((_x / _y).to_string())
+    }
+}
+
 
 // Replace variable to value.
-fn v2v(s: String) -> String {
-    let chars: Vec<char> = s.chars().collect();
-    match chars[0] {
-        '$' => {
-            let var_name = chars_to_string(&(chars[1..]).to_vec());
-            getv(var_name).unwrap()
-        },
-        _ => s
-    }
+fn v2v(var: String) -> String {
+    let mut chars: Vec<char> = var.chars().collect();
+    if chars[0] == '$' {
+        chars.remove(0);
+        let v: Vec<String> = chars.iter()
+            .map(|c| c.to_string())
+            .collect();
+        v.concat()
+    } else { var }
 }
 
-
-// Create UmeboshiCmd from input-String.
-/*fn ume<'u>(input: &'u str) -> UmeboshiCmd {
-    let cmd = v[0];
-    let params: Vec<String> = v[1..].iter_mut()
-        .map(|p| v2v(p.to_string()))
-        .collect();
-    UmeboshiCmd {cmd: cmd.to_string(), params: params}
-}*/
-#[derive(Debug, PartialEq)]
-enum Token {
-    Id(String),
-    Sum,
-    Prod,
-    Echo,
-    Getv,
-    Setv,
+macro_rules! pop2 {
+    ( $v:expr ) => ({
+        let x = $v.pop().unwrap();
+        let y = $v.pop().unwrap();
+        (x, y)
+    });
 }
 
-fn tokenize<'t>(words: Vec<&'t str>) -> Vec<Token> {
-    let mut tokens: Vec<Token> = vec![];
+fn rpn(text: &String, env: &mut HashMap<String, String>) -> String {
+    let text2: Vec<&str> = text.split_whitespace().collect();
+    let mut stack: Vec<Object> = vec![];
 
-    for w in words {
-        match w {
-            "echo" => tokens.push(Token::Echo),
-            "sum" => tokens.push(Token::Sum),
-            "prod" => tokens.push(Token::Prod),
-            "getv" => tokens.push(Token::Getv),
-            "setv" => tokens.push(Token::Setv),
-            _ => tokens.push(Token::Id(w.to_string()))
+    for t in text2 {
+        match t {
+            "+" => {
+                let (x, y) = pop2!(stack);
+                stack.push(x.add(y));
+                continue;
+            },
+            "-" => {
+                let (x, y) = pop2!(stack);
+                stack.push(y.sub(x));
+                continue;
+            }, 
+            "*" => {
+                let (x, y) = pop2!(stack);
+                stack.push(x.mul(y));
+                continue;
+            }, 
+            "/" => {
+                let (x, y) = pop2!(stack);
+                stack.push(y.div(x));
+                continue;
+            },
+            "eq"|"==" => {
+                let (x, y) = pop2!(stack);
+                stack.push(Object(format!("{}", x == y)));
+                continue;
+            },
+            "not"|"!=" => {
+                let (x, y) = pop2!(stack);
+                stack.push(Object(format!("{}", x != y)));
+                continue;
+            },
+            "lt"|"<" => {
+                let (x, y) = pop2!(stack);
+                stack.push(Object(format!("{}", y < x)));
+                continue;
+            },
+            "gt"|">" => {
+                let (x, y) = pop2!(stack);
+                stack.push(Object(format!("{}", y > x)));
+                continue;
+            },
+            "le"|"<=" => {
+                let (x, y) = pop2!(stack);
+                stack.push(Object(format!("{}", y <= x)));
+                continue;
+            },
+            "ge"|">=" => {
+                let (x, y) = pop2!(stack);
+                stack.push(Object(format!("{}", y >= x)));
+                continue;
+            },
+            "bind" => {
+                let key = stack.pop().unwrap().0;
+                let value = stack.pop().unwrap().0;
+                env.insert(key, value);
+                continue;
+            },
+            _ => {
+                if t.starts_with("$") {
+                    let s = v2v(t.to_string());
+                    let value = env.get(&s).unwrap();
+                    stack.push(Object(value.to_string()));
+                } else {
+                    stack.push(Object(t.to_string()))
+                }
+                continue;
+            }
         }
     }
-    tokens
+    let stk: Vec<String> = stack.iter().map(|s| s.get_attr()).collect();
+    stk.join(" ")
 }
 
 // Main Loop
 fn main() {
+    let mut global_env: HashMap<String, String> = HashMap::new();
     println!("{}{}{}",
              color::Fg(color::Red),
              TITLE,
@@ -121,27 +198,20 @@ fn main() {
         io::stdout().flush().expect("Couldn't flush stdout.");
         io::stdin().read_line(&mut s).expect("Failed.");
 
-        let words: Vec<&str> = s.trim()
-            .split_whitespace()
-            .collect();
-
-        match &words[0] {
-            &"quit"|&":q" => break,
-            &"version"|&":v" => {
-                println!("{}", VERSION);
-                continue;
-            },
-            &"help"|&":h" => {
-                println!("{}{}{}",
-                         color::Fg(color::Cyan),
-                         HELP,
-                         style::Reset);
-                continue;
-            },
-            _ => {
-                println!("{:?}", tokenize(words));
-                continue;
-            }
+        if s.starts_with("quit") {
+            break;
+        } else if s.starts_with("version") {
+            println!("{}", VERSION);
+            continue;
+        } else if s.starts_with("help") {
+            println!("{}{}{}",
+                    color::Fg(color::Cyan),
+                    HELP,
+                    style::Reset);
+            continue;
+        } else {
+            println!("{}", rpn(&s, &mut global_env));
+            continue;
         }
     }
 }
