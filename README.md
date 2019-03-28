@@ -23,3 +23,6 @@ However, umeboshi is still under development :)
     umeboshi>> 18 $x +
     30
 
+## Screenshot
+
+<img src="./imgs/umeboshi-screenshot.png" alt="umeboshi screenshot">
