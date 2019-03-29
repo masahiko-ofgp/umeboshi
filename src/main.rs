@@ -82,8 +82,33 @@ impl Div for Object {
     }
 }
 
+#[test]
+fn test_calc() {
+    assert_eq!(
+        Object("1".to_string()).add(Object("2.3".to_string())),
+        Object("3.3".to_string())
+        );
+    assert_eq!(
+        Object("4.5".to_string()).sub(Object("6.7".to_string())),
+        Object("-2.2".to_string())
+        );
+    assert_eq!(
+        Object("8".to_string()).mul(Object("9.0".to_string())),
+        Object("72".to_string())
+        );
+    assert_eq!(
+        Object("10.0".to_string()).div(Object("2.0".to_string())),
+        Object("5".to_string())
+        );
+}
 
 // Replace variable to value.
+// 1. Define variable.
+//     umeboshi>> 12 x bind
+// 2. Call variable.
+//     umeboshi>> $x
+//     12
+// `$` is sign of variable.
 fn v2v(var: String) -> String {
     let mut chars: Vec<char> = var.chars().collect();
     if chars[0] == '$' {
@@ -103,6 +128,7 @@ macro_rules! pop2 {
     });
 }
 
+// Reverse Polish Notation.
 fn rpn(text: &String, env: &mut HashMap<String, String>) -> String {
     let text2: Vec<&str> = text.split_whitespace().collect();
     let mut stack: Vec<Object> = vec![];
