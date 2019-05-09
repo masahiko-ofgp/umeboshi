@@ -10,3 +10,4 @@ description = "Small language by using Reverse Polish Notation."
 
 [dependencies]
 termion = "1.5.1"
+fnv = "1.0.6"

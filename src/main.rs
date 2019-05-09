@@ -8,8 +8,8 @@
 use termion::{color, style};
 use std::io;
 use std::io::Write;
-use std::collections::HashMap;
-use std::ops::*;
+use fnv::FnvHashMap;
+use std::ops::{Add, Div, Mul, Sub};
 
 const VERSION: &str = "0.2.0";
 const TITLE: &str = "
@@ -30,10 +30,10 @@ const HELP: &str = r#"
     "#;
 
 #[derive(Debug, PartialEq, PartialOrd)]
-struct Object(String);
+pub struct Object(pub String);
 
 impl Object {
-    fn get_attr(&self) -> String {
+    pub fn get_attr(&self) -> String {
         format!("{}", self.0)
     }
 }
@@ -129,7 +129,7 @@ macro_rules! pop2 {
 }
 
 // Reverse Polish Notation.
-fn rpn(text: &String, env: &mut HashMap<String, String>) -> String {
+fn rpn(text: &String, env: &mut FnvHashMap<String, String>) -> String {
     let text2: Vec<&str> = text.split_whitespace().collect();
     let mut stack: Vec<Object> = vec![];
 
@@ -209,7 +209,7 @@ fn rpn(text: &String, env: &mut HashMap<String, String>) -> String {
 
 // Main Loop
 fn main() {
-    let mut global_env: HashMap<String, String> = HashMap::new();
+    let mut global_env: FnvHashMap<String, String> = FnvHashMap::default();
     println!("{}{}{}",
              color::Fg(color::Red),
              TITLE,
