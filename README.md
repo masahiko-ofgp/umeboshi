@@ -6,7 +6,7 @@ Umeboshi is japanese apricot pickles. I like :)
 
 This application is something like Common Lisp REPL.
 
-However, umeboshi is still under development :)
+However, umeboshi is still under developing :)
 
 ## Usage
 
