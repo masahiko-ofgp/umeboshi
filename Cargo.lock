@@ -35,7 +35,7 @@ dependencies = [
 
 [[package]]
 name = "umeboshi"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "fnv 1.0.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "termion 1.5.1 (registry+https://github.com/rust-lang/crates.io-index)",

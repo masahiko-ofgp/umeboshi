@@ -1,12 +1,12 @@
 [package]
 name = "umeboshi"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Masahiko Hamazawa <ichigyo.zanmai@gmail.com>"]
 edition = "2018"
 license = "MIT"
 readme = "README.md"
 repository = "https://github.com/masahiko-ofgp/umeboshi"
-description = "Small language by using Reverse Polish Notation."
+description = "Something like Common Lisp REPL."
 
 [dependencies]
 termion = "1.5.1"

@@ -4,7 +4,7 @@
 
 Umeboshi is japanese apricot pickles. I like :)
 
-This application is a small language by using Reverse Polish Notation.
+This application is something like Common Lisp REPL.
 
 However, umeboshi is still under development :)
 
@@ -14,13 +14,15 @@ However, umeboshi is still under development :)
 
     umeboshi>> Hello world!
     Hello world!
-    umeboshi>> 1 2 +
+    umeboshi>> (print Hello, world!)
+    Hello, world!
+    umeboshi>> (+ 1 2)
     3
-    umeboshi>> 1 2 + 3 ==
+    umeboshi>> (eq 4 (* 2 2))
     true
-    umeboshi>> 12 x bind
+    umeboshi>> (define x 12)
 
-    umeboshi>> 18 $x +
+    umeboshi>> (+ $x 18)
     30
 
 ## Screenshot
