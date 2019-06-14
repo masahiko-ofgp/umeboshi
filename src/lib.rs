@@ -23,11 +23,19 @@ const HELP: &str = r#"
         (define x 12) => define variable 'x'
         (eq $x (* 3 4)) => true
         ...
+     or No-parens OK.
+     e.g.)
+        + 1 2 => 3
+        define x 12
     "#;
+
+// Variable Table
+pub type UmeEnv = FnvHashMap<String, String>;
+
 
 // REPL Main
 pub fn repl() {
-    let mut global_env: FnvHashMap<String, String> = FnvHashMap::default();
+    let mut global_env: UmeEnv = FnvHashMap::default();
     println!("{}{}{}",
              color::Fg(color::Red),
              TITLE,

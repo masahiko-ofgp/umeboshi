@@ -6,9 +6,10 @@
 //  according to those terms.
 
 
-use fnv::FnvHashMap;
+use super::UmeEnv;
 use std::collections::VecDeque;
 use std::str::FromStr;
+
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Token {
@@ -27,6 +28,7 @@ pub enum Token {
     Define,
     Print,
 }
+
 
 impl Token {
     fn get_str(&self) -> Option<String> {
@@ -127,28 +129,26 @@ fn tokenize<'t>(expr: &'t str) -> VecDeque<Token>{
     let expr2 = &expr.split_whitespace()
         .collect::<Vec<&str>>()
         .iter()
-        .fold(VecDeque::new(), |mut v, l| {v.push_front(to_token(l)); v});
-
+        .fold(VecDeque::new(), |mut v, l| {
+            v.push_front(to_token(l));
+            v
+        });
     expr2.clone()
 }
 
 /// This function change from variable to value.
 fn v2v(var: String) -> String {
     let mut chars: Vec<char> = var.chars().collect();
-    if chars[0] == '$' {
-        chars.remove(0);
-        let v: Vec<String> = chars.iter()
-            .map(|c| c.to_string())
-            .collect();
-        v.concat()
-    } else { var }
+    chars.remove(0);
+    chars.iter()
+        .fold(String::new(), |mut s, c| {
+            s.push_str(&(c.to_string()));
+            s
+        })
 }
 
 
-pub fn eval<'e>(
-    text: &'e str,
-    env: &mut FnvHashMap<String, String>) -> String
-{
+pub fn eval<'e>(text: &'e str, env: &mut UmeEnv) -> String {
     let tokens = tokenize(&text);
     let mut stack: Vec<Token> = vec![];
 
