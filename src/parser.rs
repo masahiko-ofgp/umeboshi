@@ -15,6 +15,7 @@ use std::str::FromStr;
 pub enum Token {
     Num(f64),
     Str(String),
+    Var(String),
     Plus,
     Minus,
     Times,
@@ -41,7 +42,7 @@ impl Token {
     fn add(self, rhs: Self) -> Self {
         match (self, rhs) {
             (Token::Num(x), Token::Num(y)) => Token::Num(x + y),
-            _ => panic!("Couldn't additoin.")
+            _ => panic!("Couldn't add.")
         }
     }
     fn sub(self, rhs: Self) -> Self {
@@ -59,7 +60,7 @@ impl Token {
     fn div(self, rhs: Self) -> Self {
         match (self, rhs) {
             (Token::Num(x), Token::Num(y)) => Token::Num(x / y),
-            _ => panic!("Couldn't sub.")
+            _ => panic!("Couldn't div.")
         }
     }
     fn eq(self, rhs: Self) -> Self {
@@ -68,7 +69,7 @@ impl Token {
                 Token::Str(format!("{:?}", x == y)),
             (Token::Str(x), Token::Str(y)) =>
                 Token::Str(format!("{:?}", &x[..] == &y[..])),
-            _ => panic!("Couldn't additoin.")
+            _ => panic!("Couldn't compare.")
         }
     }
     fn ne(self, rhs: Self) -> Self {
@@ -118,6 +119,8 @@ fn to_token<'t>(lexem: &'t str) -> Token {
             Token::Num(lexem.parse::<f64>().unwrap())
         } else if lexem.parse::<i64>().is_ok() {
             Token::Num((lexem.parse::<i64>().unwrap()) as f64)
+        } else if lexem.starts_with("$") {
+            Token::Var(lexem.to_string())
         } else {
             Token::Str(lexem.to_string())
         },
@@ -242,20 +245,28 @@ pub fn eval<'e>(text: &'e str, env: &mut UmeEnv) -> String {
                 } else {
                     continue;
                 }
-            }
+            },
+            Token::Var(ref v) => {
+                let s = v2v(v.to_string());
+                let value = env.get(&s).unwrap();
+                stack.push(
+                    Token::Str(value.to_string())
+                    );
+                continue;
+            },
             Token::Str(ref st) => {
-                if st.starts_with("$") {
-                    let s = v2v(st.to_string());
-                    let value = env.get(&s).unwrap();
-                    if <f64>::from_str(&value).is_ok() {
-                        stack.push(Token::Num(value.parse::<f64>().unwrap()));
-                    } else if <i64>::from_str(&value).is_ok() {
-                        stack.push(Token::Num((value.parse::<i64>().unwrap()) as f64));
-                    } else {
-                        stack.push(Token::Str(value.to_string()));
-                    }
+                if <f64>::from_str(&st).is_ok() {
+                    stack.push(
+                        Token::Num(st.parse::<f64>().unwrap())
+                        );
+                } else if <i64>::from_str(&st).is_ok() {
+                    stack.push(
+                        Token::Num((st.parse::<i64>().unwrap()) as f64)
+                        );
                 } else {
-                    stack.push(Token::Str(st.to_string()))
+                    stack.push(
+                        Token::Str(st.to_string())
+                        );
                 }
                 continue;
             },
