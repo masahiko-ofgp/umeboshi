@@ -1,6 +1,6 @@
 [package]
 name = "umeboshi"
-version = "0.3.1"
+version = "0.3.2"
 authors = ["Masahiko Hamazawa <ichigyo.zanmai@gmail.com>"]
 edition = "2018"
 license = "MIT"

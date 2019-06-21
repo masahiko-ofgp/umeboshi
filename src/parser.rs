@@ -150,6 +150,16 @@ fn v2v(var: String) -> String {
         })
 }
 
+/// Helper
+fn try_to_f64<'b>(s: &'b str) -> Option<f64> {
+    if <f64>::from_str(s).is_ok() {
+        Some(s.parse::<f64>().unwrap())
+    } else if <i64>::from_str(s).is_ok() {
+        Some((s.parse::<i64>().unwrap()) as f64)
+    } else {
+        None
+    }
+}
 
 pub fn eval<'e>(text: &'e str, env: &mut UmeEnv) -> String {
     let tokens = tokenize(&text);
@@ -219,7 +229,7 @@ pub fn eval<'e>(text: &'e str, env: &mut UmeEnv) -> String {
             },
             Token::Define => {
                 let key = stack.pop().unwrap().get_str().unwrap();
-                let value = stack.pop().unwrap().get_str().unwrap();
+                let value = stack.pop().unwrap();
                 env.insert(key, value);
                 continue;
             },
@@ -248,25 +258,27 @@ pub fn eval<'e>(text: &'e str, env: &mut UmeEnv) -> String {
             },
             Token::Var(ref v) => {
                 let s = v2v(v.to_string());
-                let value = env.get(&s).unwrap();
-                stack.push(
-                    Token::Str(value.to_string())
-                    );
+                let tk = env.get(&s).unwrap();
+                let value = &tk.get_str().unwrap();
+                
+                match try_to_f64(&value) {
+                    Some(n) => {
+                        stack.push(Token::Num(n));
+                    },
+                    None => {
+                        stack.push(Token::Str(value.to_string()));
+                    }
+                }
                 continue;
             },
             Token::Str(ref st) => {
-                if <f64>::from_str(&st).is_ok() {
-                    stack.push(
-                        Token::Num(st.parse::<f64>().unwrap())
-                        );
-                } else if <i64>::from_str(&st).is_ok() {
-                    stack.push(
-                        Token::Num((st.parse::<i64>().unwrap()) as f64)
-                        );
-                } else {
-                    stack.push(
-                        Token::Str(st.to_string())
-                        );
+                match try_to_f64(&st) {
+                    Some(n) => {
+                        stack.push(Token::Num(n));
+                    },
+                    None => {
+                        stack.push(Token::Str(st.to_string()));
+                    }
                 }
                 continue;
             },

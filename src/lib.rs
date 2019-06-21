@@ -11,7 +11,7 @@ use std::io::Write;
 use fnv::FnvHashMap;
 
 pub mod parser;
-use parser::eval;
+use parser::{eval, Token};
 
 const TITLE: &str = "Umeboshi (>*<)\n";
 const HELP: &str = r#"
@@ -30,7 +30,7 @@ const HELP: &str = r#"
     "#;
 
 // Variable Table
-pub type UmeEnv = FnvHashMap<String, String>;
+pub type UmeEnv = FnvHashMap<String, Token>;
 
 
 // REPL Main
