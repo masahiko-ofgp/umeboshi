@@ -115,10 +115,8 @@ fn to_token<'t>(lexem: &'t str) -> Token {
         ">=" | "ge" => Token::Ge,
         "define" => Token::Define,
         "print" => Token::Print,
-        _ => if lexem.parse::<f64>().is_ok() {
-            Token::Num(lexem.parse::<f64>().unwrap())
-        } else if lexem.parse::<i64>().is_ok() {
-            Token::Num((lexem.parse::<i64>().unwrap()) as f64)
+        _ => if try_to_f64(&lexem).is_some() {
+            Token::Num(try_to_f64(&lexem).unwrap())
         } else if lexem.starts_with("$") {
             Token::Var(lexem.to_string())
         } else {
@@ -150,7 +148,7 @@ fn v2v(var: String) -> String {
         })
 }
 
-/// Helper
+/// Try to convert from str to f64.
 fn try_to_f64<'b>(s: &'b str) -> Option<f64> {
     if <f64>::from_str(s).is_ok() {
         Some(s.parse::<f64>().unwrap())
@@ -161,6 +159,16 @@ fn try_to_f64<'b>(s: &'b str) -> Option<f64> {
     }
 }
 
+
+/// This function pop twice.
+fn pop2(stk: &mut Vec<Token>) -> Option<(Token, Token)> {
+    match (stk.pop(), stk.pop()) {
+        (Some(tk1), Some(tk2)) => Some((tk1, tk2)),
+        _ => None,
+    }
+}
+
+
 pub fn eval<'e>(text: &'e str, env: &mut UmeEnv) -> String {
     let tokens = tokenize(&text);
     let mut stack: Vec<Token> = vec![];
@@ -168,70 +176,92 @@ pub fn eval<'e>(text: &'e str, env: &mut UmeEnv) -> String {
     for tk in tokens.iter() {
         match tk {
             Token::Plus => {
-                let x = stack.pop().unwrap();
-                let y = stack.pop().unwrap();
-                stack.push(x.add(y));
-                continue;
+                if let Some((x, y)) = pop2(&mut stack) {
+                    stack.push(x.add(y));
+                    continue;
+                } else {
+                    return "ERROR: `+` and `add` require 2 params".to_string();
+                }
             },
             Token::Minus => {
-                let x = stack.pop().unwrap();
-                let y = stack.pop().unwrap();
-                stack.push(x.sub(y));
-                continue;
+                if let Some((x, y)) = pop2(&mut stack) {
+                    stack.push(x.sub(y));
+                    continue;
+                } else {
+                    return "ERROR: `-` and `sub` require 2 params".to_string();
+                }
             }, 
             Token::Times => {
-                let x = stack.pop().unwrap();
-                let y = stack.pop().unwrap();
-                stack.push(x.mul(y));
-                continue;
+                if let Some((x, y)) = pop2(&mut stack) {
+                    stack.push(x.mul(y));
+                    continue;
+                } else {
+                    return "ERROR: `*` and `mul` require 2 params".to_string();
+                }
             }, 
             Token::Div => {
-                let x = stack.pop().unwrap();
-                let y = stack.pop().unwrap();
-                stack.push(x.div(y));
-                continue;
+                if let Some((x, y)) = pop2(&mut stack) {
+                    stack.push(x.div(y));
+                    continue;
+                } else {
+                    return "ERROR: `/` and `div` require 2 params".to_string();
+                }
             },
             Token::Eq => {
-                let x = stack.pop().unwrap();
-                let y = stack.pop().unwrap();
-                stack.push(x.eq(y));
-                continue;
+                if let Some((x, y)) = pop2(&mut stack) {
+                    stack.push(x.eq(y));
+                    continue;
+                } else {
+                    return "ERROR: `==` and `eq` require 2 params".to_string();
+                }
             },
             Token::Ne => {
-                let x = stack.pop().unwrap();
-                let y = stack.pop().unwrap();
-                stack.push(x.ne(y));
-                continue;
+                if let Some((x, y)) = pop2(&mut stack) {
+                    stack.push(x.ne(y));
+                    continue;
+                } else {
+                    return "ERROR: `!=` and `ne` require 2 params".to_string();
+                }
             },
             Token::Lt => {
-                let x = stack.pop().unwrap();
-                let y = stack.pop().unwrap();
-                stack.push(y.lt(x));
-                continue;
+                if let Some((x, y)) = pop2(&mut stack) {
+                    stack.push(y.lt(x));
+                    continue;
+                } else {
+                    return "ERROR: `<` and `lt` require 2 params".to_string();
+                }
             },
             Token::Gt => {
-                let x = stack.pop().unwrap();
-                let y = stack.pop().unwrap();
-                stack.push(x.lt(y));
-                continue;
+                if let Some((x, y)) = pop2(&mut stack) {
+                    stack.push(x.lt(y));
+                    continue;
+                } else {
+                    return "ERROR: `>` and `gt` require 2 params".to_string();
+                }
             },
             Token::Le => {
-                let x = stack.pop().unwrap();
-                let y = stack.pop().unwrap();
-                stack.push(y.le(x));
-                continue;
+                if let Some((x, y)) = pop2(&mut stack) {
+                    stack.push(y.le(x));
+                    continue;
+                } else {
+                    return "ERROR: `<=` and `le` require 2 params".to_string();
+                }
             },
             Token::Ge => {
-                let x = stack.pop().unwrap();
-                let y = stack.pop().unwrap();
-                stack.push(x.le(y));
-                continue;
+                if let Some((x, y)) = pop2(&mut stack) {
+                    stack.push(x.le(y));
+                    continue;
+                } else {
+                    return "ERROR: `>=` and `ge` require 2 params".to_string();
+                }
             },
             Token::Define => {
-                let key = stack.pop().unwrap().get_str().unwrap();
-                let value = stack.pop().unwrap();
-                env.insert(key, value);
-                continue;
+                if let Some((key, value)) = pop2(&mut stack) {
+                    env.insert(key.get_str().unwrap(), value);
+                    continue;
+                } else {
+                    return "ERROR: Syntax Error.".to_string();
+                }
             },
             Token::Print => {
                 if stack.len() >= 1 {
