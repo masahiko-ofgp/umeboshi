@@ -16,6 +16,7 @@ pub enum Token {
     Num(f64),
     Str(String),
     Var(String),
+    List(Vec<Token>),
     Plus,
     Minus,
     Times,
@@ -28,6 +29,9 @@ pub enum Token {
     Ge,
     Define,
     Print,
+    ListCmd,
+    First,
+    Rest,
 }
 
 
@@ -99,7 +103,40 @@ impl Token {
             _ => panic!("Couldn't compare.")
         }
     }
+    // FIXME:
+    // :OK:
+    //     >> (define x (list 1 2 3))
+    //     >> (print $x)
+    //     [Num(1.0), Num(2.0), Num(3.0)]
+    //     >> (+ (first $x) 5)
+    //     6
+    // :ERROR:
+    //     >> (+ (first (list 1 2 3)) 5)
+    //     panic!
+    fn first(&self) -> Option<Self> {
+        match self {
+            Token::List(l) => Some(l[0].clone()),
+            _ => None,
+        }
+    }
+    // FIXME:
+    // :Ok:
+    //     >> (define x (list 1 2 3))
+    //     >> (print $x)
+    //     [Num(1.0), Num(2.0), Num(3.0)]
+    //     >> (+ (first (rest $x)) 5)
+    //     7
+    // :ERROR:
+    //     >> (+ (first (rest (list 1 2 3))) 5)
+    //     panic!
+    fn rest(&self) -> Option<Vec<Self>> {
+        match self {
+            Token::List(l) => Some(l[1..].to_vec()),
+            _ => None,
+        }
+    }
 }
+
 
 fn to_token<'t>(lexem: &'t str) -> Token {
     match &lexem[..] {
@@ -115,6 +152,9 @@ fn to_token<'t>(lexem: &'t str) -> Token {
         ">=" | "ge" => Token::Ge,
         "define" => Token::Define,
         "print" => Token::Print,
+        "list" => Token::ListCmd,
+        "first" => Token::First,
+        "rest" => Token::Rest,
         _ => if try_to_f64(&lexem).is_some() {
             Token::Num(try_to_f64(&lexem).unwrap())
         } else if lexem.starts_with("$") {
@@ -166,6 +206,24 @@ fn pop2(stk: &mut Vec<Token>) -> Option<(Token, Token)> {
         (Some(tk1), Some(tk2)) => Some((tk1, tk2)),
         _ => None,
     }
+}
+
+
+fn to_list(stk: &mut Vec<Token>) -> Vec<Token> {
+    let mut list: VecDeque<Token> = VecDeque::new();
+
+    loop {
+        match stk.pop() {
+            Some(tk) => {
+                list.push_back(tk);
+                continue;
+            },
+            None => break,
+        }
+    }
+
+    let list2: Vec<Token> = list.into();
+    list2
 }
 
 
@@ -275,6 +333,9 @@ pub fn eval<'e>(text: &'e str, env: &mut UmeEnv) -> String {
                                 Token::Num(n) => s.push_str(
                                     &format!("{}", &n.to_string())
                                     ),
+                                Token::List(v) => s.push_str(
+                                    &format!("{:?}", &v)
+                                    ),
                                 _ => break,
                             },
                             None => break,
@@ -286,19 +347,34 @@ pub fn eval<'e>(text: &'e str, env: &mut UmeEnv) -> String {
                     continue;
                 }
             },
+            Token::ListCmd => {
+                let list = to_list(&mut stack);
+                stack.push(Token::List(list.clone()));
+                continue;
+            },
+            Token::List(_) => {
+                continue;
+            },
+            Token::First => {
+                let list = stack.pop().unwrap();
+                let tk2 = &list.first().unwrap().clone();
+                let s = tk2.get_str().unwrap();
+                match try_to_f64(&s) {
+                    Some(n) => stack.push(Token::Num(n)),
+                    None => stack.push(Token::Str(s)),
+                }
+                continue;
+            },
+            Token::Rest => {
+                let list = stack.pop().unwrap();
+                let tokens = &list.rest().unwrap();
+                stack.push(Token::List(tokens.to_vec()));
+                continue;
+            },
             Token::Var(ref v) => {
                 let s = v2v(v.to_string());
                 let tk = env.get(&s).unwrap();
-                let value = &tk.get_str().unwrap();
-                
-                match try_to_f64(&value) {
-                    Some(n) => {
-                        stack.push(Token::Num(n));
-                    },
-                    None => {
-                        stack.push(Token::Str(value.to_string()));
-                    }
-                }
+                stack.push(tk.clone());
                 continue;
             },
             Token::Str(ref st) => {
