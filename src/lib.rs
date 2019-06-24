@@ -11,7 +11,9 @@ use std::io::Write;
 use fnv::FnvHashMap;
 
 pub mod parser;
-use parser::{eval, Token};
+pub mod lexer;
+use parser::eval;
+use lexer::Token;
 
 const TITLE: &str = "Umeboshi (>*<)\n";
 const HELP: &str = r#"
