@@ -41,7 +41,7 @@ impl Token {
         match *self {
             Token::Num(n) => Some(format!("{}", n)),
             Token::Str(ref s) => Some(s.to_string()),
-            Token::Bool(b) => Some(format!("{:?}", b)),
+            Token::Bool(b) => Some(format!("{}", b)),
             _ => None
         }
     }
@@ -325,14 +325,10 @@ pub fn eval<'e>(text: &'e str, env: &mut UmeEnv) -> String {
                     loop {
                         match stack.pop() {
                             Some(tk) => match tk {
-                                Token::Str(st) => s.push_str(
-                                    &format!("{} ", &st)
-                                    ),
-                                Token::Num(n) => s.push_str(
-                                    &format!("{}", &n.to_string())
-                                    ),
-                                Token::List(v) => s.push_str(
-                                    &format!("{:?}", &v)
+                                Token::Str(_)|Token::Num(_)|Token::Bool(_) => 
+                                    s.push_str(&tk.get_str().unwrap()),
+                                Token::List(l) => s.push_str(
+                                    &format!("{:?}", &l)
                                     ),
                                 _ => break,
                             },
@@ -401,14 +397,10 @@ pub fn eval<'e>(text: &'e str, env: &mut UmeEnv) -> String {
     loop {
         match stack.pop() {
             Some(tk) => match tk {
-                Token::Str(st) => s.push_str(
-                    &format!("{} ", &st)
-                    ),
-                Token::Num(n) => s.push_str(
-                    &format!("{}", &n.to_string())
-                    ),
-                Token::Bool(b) => s.push_str(
-                    &format!("{}", &b.to_string())
+                Token::Str(_)|Token::Num(_)|Token::Bool(_) =>
+                    s.push_str(&tk.get_str().unwrap()),
+                Token::List(l) => s.push_str(
+                    &format!("{:?}", &l)
                     ),
                 _ => break,
             },
