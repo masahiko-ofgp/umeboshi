@@ -16,6 +16,7 @@ pub enum Token {
     Num(f64),
     Str(String),
     Var(String),
+    Bool(bool),
     List(Vec<Token>),
     Plus,
     Minus,
@@ -40,6 +41,7 @@ impl Token {
         match *self {
             Token::Num(n) => Some(format!("{}", n)),
             Token::Str(ref s) => Some(s.to_string()),
+            Token::Bool(b) => Some(format!("{:?}", b)),
             _ => None
         }
     }
@@ -69,37 +71,31 @@ impl Token {
     }
     fn eq(self, rhs: Self) -> Self {
         match (self, rhs) {
-            (Token::Num(x), Token::Num(y)) =>
-                Token::Str(format!("{:?}", x == y)),
-            (Token::Str(x), Token::Str(y)) =>
-                Token::Str(format!("{:?}", &x[..] == &y[..])),
+            (Token::Num(x), Token::Num(y)) => Token::Bool(x == y),
+            (Token::Str(x), Token::Str(y)) => Token::Bool(&x[..] == &y[..]),
+            (Token::Bool(x), Token::Bool(y)) => Token::Bool(x == y),
             _ => panic!("Couldn't compare.")
         }
     }
     fn ne(self, rhs: Self) -> Self {
         match (self, rhs) {
-            (Token::Num(x), Token::Num(y)) =>
-                Token::Str(format!("{:?}", x != y)),
-            (Token::Str(x), Token::Str(y)) =>
-                Token::Str(format!("{:?}", &x[..] != &y[..])),
+            (Token::Num(x), Token::Num(y)) => Token::Bool(x != y),
+            (Token::Str(x), Token::Str(y)) => Token::Bool(&x[..] != &y[..]),
+            (Token::Bool(x), Token::Bool(y)) => Token::Bool(x != y),
             _ => panic!("Couldn't compare.")
         }
     }
     fn lt(self, rhs: Self) -> Self {
         match (self, rhs) {
-            (Token::Num(x), Token::Num(y)) =>
-                Token::Str(format!("{:?}", x < y)),
-            (Token::Str(x), Token::Str(y)) =>
-                Token::Str(format!("{:?}", &x[..] < &y[..])),
+            (Token::Num(x), Token::Num(y)) => Token::Bool(x < y),
+            (Token::Str(x), Token::Str(y)) => Token::Bool(&x[..] < &y[..]),
             _ => panic!("Couldn't compare.")
         }
     }
     fn le(self, rhs: Self) -> Self {
         match (self, rhs) {
-            (Token::Num(x), Token::Num(y)) =>
-                Token::Str(format!("{}", x <= y)),
-            (Token::Str(x), Token::Str(y)) =>
-                Token::Str(format!("{:?}", &x[..] <= &y[..])),
+            (Token::Num(x), Token::Num(y)) => Token::Bool(x <= y),
+            (Token::Str(x), Token::Str(y)) => Token::Bool(&x[..] <= &y[..]),
             _ => panic!("Couldn't compare.")
         }
     }
@@ -150,6 +146,8 @@ fn to_token<'t>(lexem: &'t str) -> Token {
         ">" | "gt" => Token::Gt,
         "<=" | "le" => Token::Le,
         ">=" | "ge" => Token::Ge,
+        "true" => Token::Bool(true),
+        "false" => Token::Bool(false),
         "define" => Token::Define,
         "print" => Token::Print,
         "list" => Token::ListCmd,
@@ -388,6 +386,10 @@ pub fn eval<'e>(text: &'e str, env: &mut UmeEnv) -> String {
                 }
                 continue;
             },
+            Token::Bool(_) => {
+                stack.push(tk.clone());
+                continue;
+            }
             Token::Num(_) => {
                 stack.push(tk.clone());
                 continue;
@@ -404,6 +406,9 @@ pub fn eval<'e>(text: &'e str, env: &mut UmeEnv) -> String {
                     ),
                 Token::Num(n) => s.push_str(
                     &format!("{}", &n.to_string())
+                    ),
+                Token::Bool(b) => s.push_str(
+                    &format!("{}", &b.to_string())
                     ),
                 _ => break,
             },
