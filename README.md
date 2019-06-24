@@ -2,6 +2,9 @@
 
 [![Build Status](https://travis-ci.org/masahiko-ofgp/umeboshi.svg?branch=master)](https://travis-ci.org/masahiko-ofgp/umeboshi)
 
+
+<img src="./imgs/umeboshi.png" alt="umeboshi logo">
+
 Umeboshi is japanese apricot pickles. I like :)
 
 This application is something like Common Lisp REPL.
