@@ -325,8 +325,15 @@ pub fn eval<'e>(text: &'e str, env: &mut UmeEnv) -> String {
                     loop {
                         match stack.pop() {
                             Some(tk) => match tk {
-                                Token::Str(_)|Token::Num(_)|Token::Bool(_) => 
-                                    s.push_str(&tk.get_str().unwrap()),
+                                Token::Str(st) => s.push_str(
+                                    &format!("{} ", &st.to_string())
+                                    ),
+                                Token::Num(n) => s.push_str(
+                                    &format!("{} ", &n.to_string())
+                                    ),
+                                Token::Bool(b) => s.push_str(
+                                    &format!("{}", &b.to_string())
+                                    ),
                                 Token::List(l) => s.push_str(
                                     &format!("{:?}", &l)
                                     ),
@@ -397,8 +404,15 @@ pub fn eval<'e>(text: &'e str, env: &mut UmeEnv) -> String {
     loop {
         match stack.pop() {
             Some(tk) => match tk {
-                Token::Str(_)|Token::Num(_)|Token::Bool(_) =>
-                    s.push_str(&tk.get_str().unwrap()),
+                Token::Str(st) => s.push_str(
+                    &format!("{} ", &st.to_string())
+                    ),
+                Token::Num(n) => s.push_str(
+                    &format!("{} ", &n.to_string())
+                    ),
+                Token::Bool(b) => s.push_str(
+                    &format!("{} ", b.to_string())
+                    ),
                 Token::List(l) => s.push_str(
                     &format!("{:?}", &l)
                     ),
