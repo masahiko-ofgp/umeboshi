@@ -26,8 +26,8 @@ fn to_token<'t>(lexem: &'t str) -> Token {
         ">=" | "ge" => Token::Ge,
         "true" => Token::Bool(true),
         "false" => Token::Bool(false),
+        "if" => Token::If,
         "define" => Token::Define,
-        "print" => Token::Print,
         "list" => Token::ListCmd,
         "first" => Token::First,
         "rest" => Token::Rest,
@@ -197,33 +197,27 @@ pub fn eval<'e>(text: &'e str, env: &mut UmeEnv) -> String {
                     return "ERROR: Syntax Error.".to_string();
                 }
             },
-            Token::Print => {
-                if stack.len() >= 1 {
-                    let mut s = String::new();
-                    loop {
-                        match stack.pop() {
-                            Some(tk) => match tk {
-                                Token::Str(st) => s.push_str(
-                                    &format!("{} ", &st.to_string())
-                                    ),
-                                Token::Num(n) => s.push_str(
-                                    &format!("{} ", &n.to_string())
-                                    ),
-                                Token::Bool(b) => s.push_str(
-                                    &format!("{}", &b.to_string())
-                                    ),
-                                Token::List(l) => s.push_str(
-                                    &format!("{:?}", &l)
-                                    ),
-                                _ => break,
-                            },
-                            None => break,
-                        }
-                    }
-                    stack.push(Token::Str(s));
-                    continue;
-                } else {
-                    continue;
+            Token::If => {
+                match stack.pop() {
+                    Some(tk2) => match tk2 {
+                        Token::Bool(b) => {
+                            if b {
+                                let then = stack.pop().unwrap();
+                                let _ = stack.pop().unwrap();
+                                stack.push(then);
+                                continue;
+                            } else {
+                                let _ = stack.pop().unwrap();
+                                continue;
+                            }
+                        },
+                        _ => {
+                            return "ERROR: Syntax Error.".to_string();
+                        },
+                    },
+                    None => {
+                        return "ERROR: Syntax Error.".to_string();
+                    },
                 }
             },
             Token::ListCmd => {
@@ -250,8 +244,8 @@ pub fn eval<'e>(text: &'e str, env: &mut UmeEnv) -> String {
                 stack.push(Token::List(tokens.to_vec()));
                 continue;
             },
-            Token::Var(ref v) => {
-                let s = v2v(v.to_string());
+            Token::Var(ref key) => {
+                let s = v2v(key.to_string());
                 let tk = env.get(&s).unwrap();
                 stack.push(tk.clone());
                 continue;

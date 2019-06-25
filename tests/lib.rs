@@ -9,10 +9,10 @@ fn test_eval() {
 
     assert_eq!("5".to_string(), eval(&test_form, &mut ume_env));
 
-    let test_form2 = "(print Hello, world!)".to_string();
+    let test_form2 = "(if (eq 1 1) True False)".to_string();
 
     assert_eq!(
-        "Hello, world!".to_string(), 
+        "True".to_string(), 
         eval(&test_form2, &mut ume_env)
         );
 }

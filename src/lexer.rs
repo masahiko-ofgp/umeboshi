@@ -23,7 +23,7 @@ pub enum Token {
     Le,
     Ge,
     Define,
-    Print,
+    If,
     ListCmd,
     First,
     Rest,
