@@ -16,6 +16,7 @@ pub enum Token {
     Minus,
     Times,
     Div,
+    Rem,
     Eq,
     Ne,
     Lt,
@@ -61,6 +62,12 @@ impl Token {
         match (self, rhs) {
             (Token::Num(x), Token::Num(y)) => Token::Num(x / y),
             _ => panic!("Couldn't div.")
+        }
+    }
+    pub fn rem(self, rhs: Self) -> Self {
+        match (self, rhs) {
+            (Token::Num(x), Token::Num(y)) => Token::Num(x % y),
+            _ => panic!("Couldn't rem.")
         }
     }
     pub fn eq(self, rhs: Self) -> Self {

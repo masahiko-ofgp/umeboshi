@@ -17,8 +17,6 @@ However, umeboshi is still under developing :)
 
     umeboshi>> Hello world!
     Hello world!
-    umeboshi>> (print Hello, world!)
-    Hello, world!
     umeboshi>> (+ 1 2)
     3
     umeboshi>> (eq 4 (* 2 2))
@@ -27,6 +25,8 @@ However, umeboshi is still under developing :)
 
     umeboshi>> (+ $x 18)
     30
+    umeboshi>> (if (eq $x 12) Equal NotEqual)
+    Equal
 
 ## Screenshot
 

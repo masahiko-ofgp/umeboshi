@@ -18,6 +18,7 @@ fn to_token<'t>(lexem: &'t str) -> Token {
         "-" | "sub" => Token::Minus,
         "*" | "mul" => Token::Times,
         "/" | "div" => Token::Div,
+        "%" | "rem" => Token::Rem,
         "==" | "eq" => Token::Eq,
         "!=" | "ne" => Token::Ne,
         "<" | "lt" => Token::Lt,
@@ -86,20 +87,19 @@ fn pop2(stk: &mut Vec<Token>) -> Option<(Token, Token)> {
 
 
 fn to_list(stk: &mut Vec<Token>) -> Vec<Token> {
-    let mut list: VecDeque<Token> = VecDeque::new();
+    let mut list: Vec<Token> = vec![];
 
     loop {
         match stk.pop() {
             Some(tk) => {
-                list.push_back(tk);
+                list.push(tk);
                 continue;
             },
             None => break,
         }
     }
 
-    let list2: Vec<Token> = list.into();
-    list2
+    list
 }
 
 
@@ -139,6 +139,14 @@ pub fn eval<'e>(text: &'e str, env: &mut UmeEnv) -> String {
                     continue;
                 } else {
                     return "ERROR: `/` and `div` require 2 params".to_string();
+                }
+            },
+            Token::Rem => {
+                if let Some((x, y)) = pop2(&mut stack) {
+                    stack.push(x.rem(y));
+                    continue;
+                } else {
+                    return "ERROR: `%` and `rem` require 2 params".to_string();
                 }
             },
             Token::Eq => {
