@@ -28,6 +28,7 @@ pub enum Token {
     ListCmd,
     First,
     Rest,
+    Sep,
 }
 
 
@@ -100,7 +101,7 @@ impl Token {
             _ => panic!("Couldn't compare.")
         }
     }
-    // FIXME:
+    // HACK:
     // :OK:
     //     >> (define x (list 1 2 3))
     //     >> (print $x)
@@ -112,13 +113,16 @@ impl Token {
     // :ERROR:
     //     >> (+ (first (list 1 2 3)) 5)
     //     panic!
+    //  If you use Token::Sep `;`,
+    //     >> (+ (first (list 1 2 3);) 5)
+    //     6
     pub fn first(&self) -> Option<Self> {
         match self {
             Token::List(l) => Some(l[0].clone()),
             _ => None,
         }
     }
-    // FIXME:
+    // HACK:
     // :Ok:
     //     >> (define x (list 1 2 3))
     //     >> (print $x)
@@ -130,6 +134,9 @@ impl Token {
     // :ERROR:
     //     >> (+ (first (rest (list 1 2 3))) 5)
     //     panic!
+    // If you use Token::Sep `;`,
+    //     >> (+ (first (rest (list 1 2 3);)) 5)
+    //     7
     pub fn rest(&self) -> Option<Vec<Self>> {
         match self {
             Token::List(l) => Some(l[1..].to_vec()),

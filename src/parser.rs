@@ -32,6 +32,7 @@ fn to_token<'t>(lexem: &'t str) -> Token {
         "list" => Token::ListCmd,
         "first" => Token::First,
         "rest" => Token::Rest,
+        ";" => Token::Sep,
         _ => if try_to_f64(&lexem).is_some() {
             Token::Num(try_to_f64(&lexem).unwrap())
         } else if lexem.starts_with("$") {
@@ -92,8 +93,12 @@ fn to_list(stk: &mut Vec<Token>) -> Vec<Token> {
     loop {
         match stk.pop() {
             Some(tk) => {
-                list.push(tk);
-                continue;
+                if tk == Token::Sep {
+                    break;
+                } else {
+                    list.push(tk);
+                    continue;
+                }
             },
             None => break,
         }
@@ -252,6 +257,10 @@ pub fn eval<'e>(text: &'e str, env: &mut UmeEnv) -> String {
                 stack.push(Token::List(tokens.to_vec()));
                 continue;
             },
+            Token::Sep => {
+                stack.push(tk.clone());
+                continue;
+            }
             Token::Var(ref key) => {
                 let s = v2v(key.to_string());
                 let tk = env.get(&s).unwrap();
